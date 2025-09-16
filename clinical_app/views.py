@@ -3004,6 +3004,8 @@ class AppointmentAPIView(LoginRequiredMixin, View):
         }
         return colors.get(status, '#007bff')
 
+        
+
 class AppointmentCreateView(LoginRequiredMixin, CreateView):
     model = Appointment
     form_class = AppointmentForm

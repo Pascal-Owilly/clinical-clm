@@ -53,6 +53,8 @@ urlpatterns = [
     path('patients/<int:patient_pk>/add_history/', views.MedicalHistoryCreateView.as_view(), name='medical_history_create'),
     path("patients/<int:patient_id>/created/", views.PatientCreatedPromptView.as_view(), name="patient_created_prompt"),
     path("patients/<int:patient_id>/visit/create/", views.VisitCreationView.as_view(), name="visit_create"),
+    path('ajax/patients/', views.search_patients_ajax, name='search_patients_ajax'),
+    path('ajax/doctors/', views.search_doctors_ajax, name='search_doctors_ajax'),
     path(
         "patients/<int:patient_id>/visits/",
         views.VisitListView.as_view(),
