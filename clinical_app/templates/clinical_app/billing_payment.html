@@ -1,0 +1,53 @@
+{% extends 'clinical_app/base.html' %}
+{% block title %}Billing Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4>Payment for Bill #{{ billing.id }}</h4>
+        </div>
+                            {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+        <div class="card-body">
+            <p><strong>Patient:</strong> {{ billing.visit.patient.full_name }}</p>
+            <p><strong>Service:</strong> {{ billing.service_type }}</p>
+            <p><strong>Amount:</strong> {{ billing.amount }} KES</p>
+
+            {% if billing.insurance_covered %}
+                <div class="alert alert-success">
+                    This bill is covered by insurance. No payment required.
+                </div>
+                <a href="{% url 'visit_list' billing.visit.patient.id %}" class="btn btn-secondary">Back to Visits</a>
+            {% else %}
+                <form method="post" action="{% url 'process_payment' billing.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="method">Payment Method</label>
+                        <select id="method" name="method" class="form-select">
+                            <option value="cash">Cash</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="card">Card</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reference_number">Reference No (optional)</label>
+                        <input type="text" id="reference_number" name="reference_number" class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Confirm Payment</button>
+                    <a href="{% url 'visit_list' billing.visit.patient.id %}" class="btn btn-link">Cancel</a>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

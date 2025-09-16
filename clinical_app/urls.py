@@ -32,11 +32,15 @@ urlpatterns = [
     # --- Billing URLs ---
     path('billing/', views.BillingListView.as_view(), name='billing_list'),
     path('billing/<int:pk>/', views.BillingDetailView.as_view(), name='billing_detail'),
-    path('encounter/<int:encounter_pk>/billing/new/', views.BillingCreateView.as_view(), name='create_billing_for_encounter'),
+    path('encounter/<int:encounter_pk>/billing/new/', views.BillingCreateView.as_view(), name='create_billing'),
     path('billing/<int:pk>/edit/', views.BillingUpdateView.as_view(), name='billing_update'),
     path('billing/<int:pk>/delete/', views.BillingDeleteView.as_view(), name='billing_delete'),
     path('billing/<int:pk>/mark-paid/', views.BillingMarkAsPaidView.as_view(), name='billing_mark_paid'), # For marking as paid
+    path("api/billing/<int:billing_id>/", views.billing_detail_api, name="billing_detail_api"),
+    path("billing/<int:pk>/payment/", views.BillingPaymentView.as_view(), name="billing_payment"),
+    path("billing/<int:billing_id>/process-payment/", views.process_payment, name="process_payment"),
 
+    path("payments/create/<int:billing_id>/", views.PaymentCreateView.as_view(), name="payment_create"),
 
     # Patient URLs
     path('patients/', views.PatientListView.as_view(), name='patient_list'),

@@ -9,25 +9,31 @@
         <h3 class="fw-bold text-info mb-0">
             <i class="fas fa-dollar-sign me-3"></i> Patient Billing
         </h3>
-        <a href="{% url 'billing_create' %}" class="btn btn-info btn-sm d-flex align-items-center">
+        <a href="" class="btn btn-info btn-sm d-flex align-items-center">
             <i class="fas fa-plus me-2"></i> Create New Bill
         </a>
     </div>
-
+                    {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
     {# Search and Filter Form #}
     <div class="card shadow-sm mb-4">
         <div class="card-body p-3">
             <form method="get" class="row g-3 align-items-center">
                 <div class="col-12 col-md-6">
-                    <label for="search-query" class="visually-hidden">Search Bills</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search"></i></span>
-                        <input type="text" id="search-query" name="q" class="form-control form-control-sm border-start-0 ps-0" placeholder="Search by patient, encounter, or policy..." value="{{ search_query }}">
+                        <input type="text" name="q" class="form-control form-control-sm border-start-0 ps-0" placeholder="Search by patient or visit..." value="{{ search_query }}">
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <label for="status-filter" class="visually-hidden">Filter by Status</label>
-                    <select class="form-select form-select-sm" id="status-filter" name="status">
+                    <select class="form-select form-select-sm" name="status">
                         <option value="">All Statuses</option>
                         {% for value, label in status_choices %}
                             <option value="{{ value }}" {% if current_status_filter == value %}selected{% endif %}>{{ label }}</option>
@@ -54,28 +60,63 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Patient</th>
-                            <th scope="col">Encounter ID</th>
-                            <th scope="col">Amount</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Actions</th>
+                            <th>#</th>
+                            <th>Patient</th>
+                            <th>Visit ID</th>
+                            <th>Insurance Covered</th>
+                            <th>Paid</th>
+                            <th>Amount</th>
+                            <th>Balance</th>
+                            <th>Payment Method</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for bill in billings %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td>{{ bill.patient.full_name }}</td>
-                            <td>{{ bill.encounter.id|default:"N/A" }}</td>
-                            <td>${{ bill.amount|floatformat:2 }}</td>
                             <td>
-                                {% if bill.status == 'paid' %}
-                                    <span class="badge bg-success">Paid</span>
-                                {% elif bill.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% if bill.visit %}
+                                    {{ bill.visit.patient.full_name }}
                                 {% else %}
-                                    <span class="badge bg-secondary">Draft</span>
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bill.visit %}
+                                    {{ bill.visit.id }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if bill.insurance_covered %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bill.balance == 0 %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                             <td>Kes {{ bill.amount|floatformat:2 }}</td>
+
+                            <td>Kes {{ bill.balance|floatformat:2 }}</td>
+                            <td>
+                                {% if bill.balance == 0 %}
+                                    {% with payment=bill.payments.first %}
+                                        {% if payment %}
+                                            {{ payment.get_method_display }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    N/A
                                 {% endif %}
                             </td>
                             <td>
@@ -85,17 +126,57 @@
                                 <a href="{% url 'billing_update' bill.pk %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
+                                {% if bill.balance > 0 and not bill.insurance_covered %}
                                 <a href="{% url 'billing_mark_paid' bill.pk %}" class="btn btn-sm btn-success">
                                     <i class="fas fa-check"></i> Pay
                                 </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            {# Pagination Controls #}
+            <nav aria-label="Page navigation" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ search_query }}&status={{ current_status_filter }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?q={{ search_query }}&status={{ current_status_filter }}&page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ search_query }}&status={{ current_status_filter }}&page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
             {% else %}
-            <div class="alert alert-info text-center m-4" role="alert">
+            <div class="alert alert-info text-center m-4">
                 No billing records found.
             </div>
             {% endif %}

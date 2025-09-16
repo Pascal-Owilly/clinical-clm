@@ -5,7 +5,7 @@ from .models import (
     Diagnosis, TreatmentPlan, LabTestCategory, LabTest, LabTestRequest,
     LabTestResult, ImagingType, ImagingRequest, ImagingResult, Medication,
     Prescription, Ward, Bed, CaseSummary, CancerRegistryReport,
-    BirthRecord, MortalityRecord, ActivityLog, LabTechnician, VisitorEntryExit, Billing, Insurance
+    BirthRecord, MortalityRecord, ActivityLog, LabTechnician, VisitorEntryExit, Billing, Insurance, Payment
 )
 
 # Register your models here.
@@ -335,18 +335,18 @@ class VisitorEntryExitAdmin(admin.ModelAdmin):
 class BillingAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "patient",
-        "encounter",
-        "description",
+        "visit",
+        "get_patient",   # custom method to show patient
+        "service_type",
         "amount",
         "insurance_covered",
         "created_at",
     )
     list_filter = ("insurance_covered", "created_at")
     search_fields = (
-        "patient__full_name",
-        "patient__patient_id",
-        "description",
+        "visit__patient__full_name",
+        "visit__patient__patient_id",
+        "service_type",
     )
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
@@ -354,9 +354,8 @@ class BillingAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             "fields": (
-                "patient",
-                "encounter",
-                "description",
+                "visit",
+                "service_type",
                 "amount",
                 "insurance_covered",
             )
@@ -367,3 +366,26 @@ class BillingAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ("created_at",)
+
+    def get_patient(self, obj):
+        return obj.visit.patient if obj.visit else None
+    get_patient.short_description = "Patient"
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "billing",
+        "method",
+        "amount_paid",
+        "reference_number",
+        "paid_on",
+    )
+    list_filter = ("method", "paid_on")
+    search_fields = (
+        "billing__visit__patient__full_name",
+        "billing__visit__patient__patient_id",
+        "reference_number",
+    )
+    date_hierarchy = "paid_on"
+    ordering = ("-paid_on",)

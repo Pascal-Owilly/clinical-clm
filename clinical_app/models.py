@@ -1225,31 +1225,73 @@ class VisitorEntryExit(models.Model):
 from django.db import models
 from django.conf import settings
 from datetime import date
+from django.db.models import Sum
 
 class Billing(models.Model):
-    patient = models.ForeignKey("Patient", on_delete=models.CASCADE, related_name="billings", blank=True, null=True)
-    encounter = models.ForeignKey("Encounter", on_delete=models.SET_NULL, null=True, blank=True)
-    description = models.CharField(max_length=255, blank=True, null=True)  # e.g. "Consultation Fee", "Lab Test", "Medication"
-    amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    insurance_covered = models.BooleanField(default=False, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    SERVICE_CHOICES = (
+        ("consultation", "Consultation Fee"),
+        ("lab", "Lab Test"),
+        ("medication", "Medication"),
+        ("procedure", "Procedure"),
+        ("registration", "Registration Fee"),
+        ("other", "Other"),
+    )
+
+    STATUS_CHOICES = (
+        ("draft", "Draft"),
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+    )
+
+    visit = models.ForeignKey(
+        "Visit", on_delete=models.SET_NULL, null=True, blank=True, related_name="billings"
+    )
+    service_type = models.CharField(
+        max_length=50, choices=SERVICE_CHOICES, default="consultation"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    insurance_covered = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
-        return f"Bill for {self.patient.full_name} - {self.amount}"
-    
+        return f"{self.get_service_type_display()} - {self.amount} for {self.visit.patient.full_name}"
+
+    @property
+    def total_paid(self):
+        return self.payments.aggregate(total=Sum("amount_paid"))["total"] or 0
+
+    @property
+    def balance(self):
+        return max(self.amount - self.total_paid, 0)
+
+    def update_status(self):
+        if self.balance == 0:
+            self.status = "paid"
+        else:
+            self.status = "pending"
+        self.save()
+
 
 class Payment(models.Model):
-    billing = models.ForeignKey(Billing, on_delete=models.CASCADE, related_name="payments")
-    method_choices = (
+    METHOD_CHOICES = (
         ("cash", "Cash"),
         ("mpesa", "M-Pesa"),
         ("card", "Card"),
         ("insurance", "Insurance"),
     )
-    method = models.CharField(max_length=20, choices=method_choices)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    billing = models.ForeignKey(
+        Billing, on_delete=models.CASCADE, related_name="payments"
+    )
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     paid_on = models.DateTimeField(auto_now_add=True)
-    reference_number = models.CharField(max_length=100, blank=True, null=True)  # MPesa code, receipt no.
+    reference_number = models.CharField(
+        max_length=100, blank=True, null=True,
+        help_text="e.g. MPesa code, receipt number"
+    )
 
     def __str__(self):
         return f"{self.method} - {self.amount_paid} for {self.billing.patient.full_name}"
+

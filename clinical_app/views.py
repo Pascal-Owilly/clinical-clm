@@ -55,7 +55,7 @@ from .models import (
     ImagingRequest, ImagingResult, Prescription, CaseSummary, ConsentForm, # Prescription, ImagingRequest needed
     Ward, Bed, Department, LabTest, ImagingType, Medication, Nurse, # Added Nurse
     CancerRegistryReport, BirthRecord, MortalityRecord, ProcurementOfficer,
-    Receptionist, LabTechnician, Radiologist, ClinicalNote,Ward, Bed, VisitorEntryExit, Billing, Visit # Ensure these are imported if they are distinct profiles
+    Receptionist, LabTechnician, Radiologist, ClinicalNote,Ward, Bed, VisitorEntryExit, Billing, Payment, Visit # Ensure these are imported if they are distinct profiles
 )
 
 from .forms import (
@@ -553,6 +553,8 @@ class PatientCreatedPromptView(TemplateView):
         return context
 
     
+from django.conf import settings
+
 class VisitCreationView(FormView):
     template_name = "clinical_app/visit_create.html"
     form_class = VisitForm
@@ -563,13 +565,60 @@ class VisitCreationView(FormView):
         visit.patient = patient
         visit.save()
 
-        messages.success(self.request, f"Visit created for {patient.full_name}.")
-        # ✅ Redirect directly here
-        return redirect("visit_list", patient_id=patient.id)
+        # Create billing
+        consultation_fee = getattr(settings, "CONSULTATION_FEE", 500)
+        billing = Billing.objects.create(
+            visit=visit,
+            service_type="consultation",
+            amount=consultation_fee,
+            insurance_covered=getattr(patient, "has_insurance", False),
+        )
+        billing.update_status()  # automatically mark as paid if fully covered
+
+        messages.success(
+            self.request,
+            f"Visit created for {patient.full_name}. Consultation fee added."
+        )
+
+        # Dynamic redirect based on checkbox
+        if form.cleaned_data.get("payment_required", False):
+            return redirect("payment_create", billing_id=billing.id)
+        else:
+            return redirect("billing_list")
+
+
+@login_required
+def billing_detail_api(request, billing_id):
+    billing = get_object_or_404(Billing, pk=billing_id)
+    return JsonResponse({
+        "id": billing.id,
+        "amount": float(billing.amount),
+        "insurance_covered": billing.insurance_covered,
+    })
+
+class PaymentCreateView(LoginRequiredMixin, CreateView):
+    model = Payment
+    fields = ["method", "amount_paid", "reference_number"]
+    template_name = "clinical_app/payment_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.billing = get_object_or_404(Billing, id=self.kwargs["billing_id"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.billing = self.billing
+        response = super().form_valid(form)
+        messages.success(self.request, f"Payment recorded for Bill #{self.billing.id}")
+        return response
 
     def get_success_url(self):
-        # Fallback (not used since we redirect above)
-        return reverse_lazy("visit_list", kwargs={"patient_id": self.kwargs["patient_id"]})
+        return reverse("billing_detail", kwargs={"pk": self.billing.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["billing"] = self.billing
+        return context
+
 
 
 class VisitListView(ListView):
@@ -3023,8 +3072,9 @@ class AppointmentListView(LoginRequiredMixin, ListView):
         if search_query:
             # Use Q objects for OR conditions across multiple fields
             queryset = queryset.filter(
-                Q(patient__user__first_name__icontains=search_query) |
-                Q(patient__user__last_name__icontains=search_query) |
+                Q(patient__first_name__icontains=search_query) |
+                Q(patient__last_name__icontains=search_query) |
+                Q(patient__phone_number__icontains=search_query) |
                 Q(doctor__user__first_name__icontains=search_query) |
                 Q(doctor__user__last_name__icontains=search_query) |
                 Q(reason_for_visit__icontains=search_query)
@@ -4086,11 +4136,46 @@ class VisitorEntryExitDeleteView(IsAdminMixin, DeleteView): # Only admin can del
 
 from django.core.exceptions import PermissionDenied
 
+class BillingPaymentView(LoginRequiredMixin, DetailView):
+    model = Billing
+    template_name = "clinical_app/billing_payment.html"
+    context_object_name = "billing"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+
+def process_payment(request, billing_id):
+    billing = get_object_or_404(Billing, id=billing_id)
+
+    if billing.insurance_covered:
+        messages.info(request, "This service is covered by insurance. No payment required.")
+        return redirect("visit_list", patient_id=billing.visit.patient.id)
+
+    if request.method == "POST":
+        method = request.POST.get("method")
+        reference = request.POST.get("reference_number", "")
+
+        Payment.objects.create(
+            billing=billing,
+            amount_paid=billing.amount,  # full payment for now
+            method=method,
+            reference_number=reference,
+        )
+        messages.success(request, f"Payment for Bill #{billing.id} recorded successfully!")
+        return redirect("visit_list", patient_id=billing.visit.patient.id)
+
+    return render(request, "clinical_app/billing_payment.html", {"billing": billing})
+
+from django.db.models import Sum, F, Q
+
 class BillingListView(LoginRequiredMixin, ListView):
     model = Billing
     template_name = 'clinical_app/billing_list.html'
     context_object_name = 'billings'
-    paginate_by = 15
+    paginate_by = 25
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_staff:
@@ -4098,25 +4183,26 @@ class BillingListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
+        # Annotate with a temporary field to avoid conflict
         queryset = Billing.objects.annotate(
-            total_paid=Sum('payments__amount_paid')
-        ).select_related('patient', 'encounter').order_by('-created_at')
+            total_paid_sum=Sum('payments__amount_paid')
+        ).select_related('visit').order_by('-created_at')
 
         query = self.request.GET.get('q')
         status_filter = self.request.GET.get('status')
 
         if query:
             queryset = queryset.filter(
-                Q(patient__first_name__icontains=query) |
-                Q(patient__last_name__icontains=query) |
-                Q(encounter__id__icontains=query)
+                Q(visit__patient__first_name__icontains=query) |
+                Q(visit__patient__last_name__icontains=query) |
+                Q(visit__id__icontains=query)
             )
 
         if status_filter:
             if status_filter == 'paid':
-                queryset = queryset.filter(total_paid__gte=models.F('amount'))
+                queryset = queryset.filter(total_paid_sum__gte=F('amount'))
             elif status_filter == 'pending':
-                queryset = queryset.filter(total_paid__lt=models.F('amount'))
+                queryset = queryset.filter(total_paid_sum__lt=F('amount'))
 
         return queryset
 
@@ -4127,9 +4213,7 @@ class BillingListView(LoginRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('q', '')
         return context
 
-
 from django.db.models import Sum
-
 class BillingDetailView(LoginRequiredMixin, DetailView):
     model = Billing
     template_name = 'clinical_app/billing_detail.html'
@@ -4140,12 +4224,23 @@ class BillingDetailView(LoginRequiredMixin, DetailView):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset)
-        total_paid = obj.payments.aggregate(total=Sum('amount_paid'))['total'] or 0
-        obj.total_paid = total_paid
-        obj.balance = obj.amount - total_paid
-        return obj
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bill = self.object
+
+        # Use the property instead of trying to assign
+        total_paid = bill.total_paid
+        balance = bill.balance
+        covered_by_insurance = bill.amount if bill.insurance_covered else 0
+
+        context.update({
+            'total_paid': total_paid,
+            'balance': balance,
+            'covered_by_insurance': covered_by_insurance,
+        })
+        return context
+
+
 
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -4154,7 +4249,6 @@ class BillingCreateView(LoginRequiredMixin, CreateView):
     model = Billing
     form_class = BillingForm
     template_name = 'clinical_app/billing_form.html'
-    success_url = reverse_lazy('billing_list')
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_staff:
@@ -4162,8 +4256,15 @@ class BillingCreateView(LoginRequiredMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        messages.success(self.request, "Bill created successfully!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        billing = self.object
+
+        if billing.insurance_covered:
+            messages.success(self.request, "Bill created successfully (covered by insurance).")
+            return redirect("visit_list", patient_id=billing.visit.patient.id)
+
+        messages.success(self.request, "Bill created successfully! Please collect payment.")
+        return redirect("billing_payment", pk=billing.pk)
 
 
 class BillingUpdateView(LoginRequiredMixin, UpdateView):

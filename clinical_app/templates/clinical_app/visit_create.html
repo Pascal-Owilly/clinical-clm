@@ -38,6 +38,15 @@
                             {{ form.status|as_crispy_field }}
                         </div>
 
+                        {# Payment Required Checkbox #}
+                        <div class="form-check mb-3">
+                            {{ form.payment_required|as_crispy_field }}
+                            <label class="form-check-label fw-bold" for="{{ form.payment_required.id_for_label }}">
+                                
+                            </label>
+                            <small class="form-text text-muted"></small>
+                        </div>
+
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-success btn-lg fw-bold">Save Visit</button>
                         </div>

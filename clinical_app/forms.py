@@ -346,6 +346,12 @@ class PatientRegistrationForm(forms.ModelForm):
 
 
 class VisitForm(forms.ModelForm):
+    payment_required = forms.BooleanField(
+        required=False,
+        label="Payment required?",
+        help_text="Check this if the patient needs to pay the consultation fee."
+    )
+
     class Meta:
         model = Visit
         fields = ["reason", "doctor", "status"]
@@ -354,6 +360,7 @@ class VisitForm(forms.ModelForm):
             "doctor": forms.Select(attrs={"class": "form-control"}),
             "status": forms.Select(attrs={"class": "form-control"}),
         }
+
 
 class DepartmentForm(forms.ModelForm):
     class Meta:
@@ -1304,11 +1311,12 @@ class BillingForm(forms.ModelForm):
     class Meta:
         model = Billing
         fields = [
-            'patient', 'encounter', 'description',
+            'visit', 'service_type',
             'amount', 'insurance_covered'
         ]
         widgets = {
-            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'visit': forms.Select(attrs={'class': 'form-control'}),
+            'service_type': forms.Select(attrs={'class': 'form-control'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'insurance_covered': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -1316,18 +1324,12 @@ class BillingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Patients dropdown
-        self.fields['patient'].queryset = Patient.objects.all().order_by('first_name')
-        self.fields['patient'].label_from_instance = (
-            lambda obj: f"{obj.first_name} {obj.last_name} ({obj.patient_id})"
+        # Visits dropdown
+        self.fields['visit'].queryset = Visit.objects.all().order_by('-visit_date')
+        self.fields['visit'].label_from_instance = (
+            lambda obj: f"{obj.patient.full_name} - Visit #{obj.id} ({obj.visit_date.strftime('%Y-%m-%d')})"
         )
 
-        # Encounters dropdown
-        # Corrected the field name from 'date' to 'encounter_date'
-        self.fields['encounter'].queryset = Encounter.objects.all().order_by('-encounter_date')
-        self.fields['encounter'].label_from_instance = (
-            lambda obj: f"Encounter #{obj.id} - {obj.encounter_date.strftime('%Y-%m-%d')} ({obj.encounter_type})"
-        )
 
 # Service Form (no change from previous as it's not linked to User directly)
 class ServiceForm(forms.ModelForm):

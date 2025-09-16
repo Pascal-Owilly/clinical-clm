@@ -1,0 +1,24 @@
+{% extends "clinical_app/base.html" %}
+
+{% block title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white">
+      <h4>Record Payment for Bill #{{ billing.id }}</h4>
+    </div>
+    <div class="card-body">
+      <p><strong>Patient:</strong> {{ billing.visit.patient.full_name }}</p>
+      <p><strong>Service:</strong> {{ billing.service_type }}</p>
+      <p><strong>Amount:</strong> {{ billing.amount }} KES</p>
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Confirm Payment</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

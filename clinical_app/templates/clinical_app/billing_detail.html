@@ -15,7 +15,15 @@
             </a>
         </div>
     </div>
-
+                    {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-info text-white py-3">
             <h5 class="mb-0 fw-bold">Bill #{{ bill.id }}</h5>
@@ -25,15 +33,27 @@
                 <div class="col-md-6 mb-3">
                     <h6 class="text-muted">Patient Information</h6>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><i class="fas fa-user-circle me-2 text-primary"></i> <strong>Name:</strong> {{ bill.patient.full_name }}</li>
-                        <li class="list-group-item"><i class="fas fa-id-card me-2 text-primary"></i> <strong>Patient ID:</strong> {{ bill.patient.patient_id }}</li>
+                        <li class="list-group-item">
+                            <i class="fas fa-user-circle me-2 text-primary"></i>
+                            <strong>Name:</strong> {{ bill.visit.patient.full_name }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-id-card me-2 text-primary"></i>
+                            <strong>Patient ID:</strong> {{ bill.visit.patient.patient_id }}
+                        </li>
                     </ul>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <h6 class="text-muted">Encounter Details</h6>
+                    <h6 class="text-muted">Visit Details</h6>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><i class="fas fa-hospital me-2 text-primary"></i> <strong>Encounter ID:</strong> {{ bill.encounter.id|default:"N/A" }}</li>
-                        <li class="list-group-item"><i class="fas fa-calendar-alt me-2 text-primary"></i> <strong>Encounter Date:</strong> {{ bill.encounter.visit_date|date:"F d, Y"|default:"N/A" }}</li>
+                        <li class="list-group-item">
+                            <i class="fas fa-hospital me-2 text-primary"></i>
+                            <strong>Visit ID:</strong> {{ bill.visit.id|default:"N/A" }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                            <strong>Visit Date:</strong> {{ bill.visit.visit_date|date:"F d, Y"|default:"N/A" }}
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -46,23 +66,29 @@
                     <div class="card bg-light-info text-dark h-100">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle mb-2">Total Amount</h6>
-                            <h2 class="card-title fw-bold text-info">${{ bill.amount|floatformat:2 }}</h2>
+                            <h2 class="card-title fw-bold text-info">Kes {{ bill.amount|floatformat:2 }}</h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="card bg-light-primary text-dark h-100">
                         <div class="card-body text-center">
-                            <h6 class="card-subtitle mb-2">Insurance Coverage</h6>
-                            <h2 class="card-title fw-bold text-primary">${{ bill.covered_by_insurance|floatformat:2 }}</h2>
+                            <h6 class="card-subtitle mb-2">Insurance Covered</h6>
+                            {% if bill.insurance_covered %}
+                                <h2 class="card-title fw-bold text-primary">Yes</h2>
+                            {% else %}
+                                <h2 class="card-title fw-bold text-danger">No</h2>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="card bg-light-success text-dark h-100">
                         <div class="card-body text-center">
-                            <h6 class="card-subtitle mb-2">Patient Balance</h6>
-                            <h2 class="card-title fw-bold text-success">${{ bill.balance|floatformat:2 }}</h2>
+                            <h6 class="card-subtitle mb-2">Outstanding Balance</h6>
+                            <h2 class="card-title fw-bold text-success">
+                                Kes {{ bill.balance|floatformat:2 }}
+                            </h2>
                         </div>
                     </div>
                 </div>
@@ -73,18 +99,21 @@
             <h5 class="fw-bold text-info mb-3">Billing Status</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <p class="mb-1"><i class="fas fa-clipboard-check me-2"></i> <strong>Status:</strong>
-                        {% if bill.status == 'paid' %}
-                            <span class="badge bg-success fs-6">Paid</span>
-                        {% elif bill.status == 'pending' %}
-                            <span class="badge bg-warning text-dark fs-6">Pending</span>
-                        {% else %}
-                            <span class="badge bg-secondary fs-6">Draft</span>
-                        {% endif %}
-                    </p>
+                <p class="mb-1"><i class="fas fa-clipboard-check me-2"></i> <strong>Status:</strong>
+                    {% if bill.status == 'paid' %}
+                        <span class="badge bg-success fs-6">Paid</span>
+                    {% elif bill.status == 'pending' %}
+                        <span class="badge bg-warning text-dark fs-6">Pending</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6">Draft</span>
+                    {% endif %}
+                </p>
+
                 </div>
                 <div class="col-md-6">
-                    <p class="mb-1"><i class="fas fa-calendar-plus me-2"></i> <strong>Created On:</strong> {{ bill.created_at|date:"F d, Y H:i" }}</p>
+                    <p class="mb-1"><i class="fas fa-calendar-plus me-2"></i> 
+                        <strong>Created On:</strong> {{ bill.created_at|date:"F d, Y H:i" }}
+                    </p>
                 </div>
             </div>
             
