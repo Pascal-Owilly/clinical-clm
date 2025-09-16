@@ -1,0 +1,348 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block title %}Healthcare Reports{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary">Report Dashboard</h1>
+            <p class="lead text-secondary">Overview of healthcare system metrics and reports.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="p-3 rounded-circle bg-primary-subtle text-primary me-3">
+                        <i class="fas fa-user-injured fa-2x"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 text-muted mb-0">Total Patients</h2>
+                        <p class="h4 fw-bold mb-0">{{ total_patients }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="p-3 rounded-circle bg-success-subtle text-success me-3">
+                        <i class="fas fa-stethoscope fa-2x"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 text-muted mb-0">Total Encounters</h2>
+                        <p class="h4 fw-bold mb-0">{{ total_encounters }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="p-3 rounded-circle bg-warning-subtle text-warning me-3">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                    <div>
+                        <h2 class="h6 text-muted mb-0">Total Revenue</h2>
+                        <p class="h4 fw-bold mb-0">Ksh {{ total_revenue|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-primary">Patient-Centric Reports</h2>
+                    <div class="list-group list-group-flush mt-3">
+                        <form method="post" action="{% url 'generate_report' 'patient_register' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_7_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-list-alt me-2 text-primary"></i>
+                                Outpatient Register / Daily Log
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'demographics' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-chart-pie me-2 text-primary"></i>
+                                Demographics Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'follow_up' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="this_month">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-calendar-check me-2 text-primary"></i>
+                                Follow-up Tracking
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-success">Clinical/Encounter Reports</h2>
+                    <div class="list-group list-group-flush mt-3">
+                        <form method="post" action="{% url 'generate_report' 'consultation' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-user-md me-2 text-success"></i>
+                                Consultation Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'diagnosis' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_90_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-notes-medical me-2 text-success"></i>
+                                Diagnosis Report (ICD codes)
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'prescription' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="this_month">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-pills me-2 text-success"></i>
+                                Prescription Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'referral' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-exchange-alt me-2 text-success"></i>
+                                Referral Report
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-secondary">Operational & Recent Reports</h2>
+                    <div class="list-group list-group-flush mt-3">
+                        <form method="post" action="{% url 'generate_report' 'doctor_workload' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_7_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-chart-bar me-2 text-secondary"></i>
+                                Doctor Workload Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'department_utilization' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="this_month">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-hospital me-2 text-secondary"></i>
+                                Departmental Utilization
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'appointment' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-calendar-alt me-2 text-secondary"></i>
+                                Appointment Report
+                            </button>
+                        </form>
+                        {% for report in recent_reports %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center bg-light border-0 rounded-3 mb-2">
+                            <div>
+                                <p class="fw-medium mb-0">{{ report.title }}</p>
+                                <small class="text-muted">{{ report.generated_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                            <a href="{% url 'view_report' report.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-eye me-1"></i> View
+                            </a>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted small mt-2">No reports generated yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-warning">Financial/Billing Reports</h2>
+                    <div class="list-group list-group-flush mt-3">
+                        <form method="post" action="{% url 'generate_report' 'billing_summary' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-file-invoice-dollar me-2 text-warning"></i>
+                                Billing Summary
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'revenue' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-dollar-sign me-2 text-warning"></i>
+                                Revenue Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'outstanding_payments' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="all_time">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-credit-card me-2 text-warning"></i>
+                                Outstanding Payments
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'insurance_claims' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="this_month">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-shield-alt me-2 text-warning"></i>
+                                Insurance Claims Report
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-danger">Specialized Reports</h2>
+                    <div class="list-group list-group-flush mt-3">
+                        <form method="post" action="{% url 'generate_report' 'chronic_disease' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_90_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-heartbeat me-2 text-danger"></i>
+                                Chronic Disease Management
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'vaccination' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="all_time">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-syringe me-2 text-danger"></i>
+                                Vaccination/Immunization Report
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'generate_report' 'lab_imaging' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="date_preset" value="last_30_days">
+                            <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 mb-2 w-100 text-start">
+                                <i class="fas fa-flask me-2 text-danger"></i>
+                                Lab & Imaging Reports
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-4 d-none d-md-block"></div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-primary">Patient Gender Distribution</h2>
+                    <div id="patientChart" style="height: 300px;">
+                        <p class="text-center text-muted mt-5">Loading Patient Data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-4">
+                    <h2 class="h5 card-title fw-bold text-primary">Revenue by Payment Method</h2>
+                    <div id="revenueChart" style="height: 300px;">
+                        <p class="text-center text-muted mt-5">Loading Revenue Data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function createPlotlyChart(elementId, data, title, type) {
+            const chartData = [{
+                x: data.map(item => item.label),
+                y: data.map(item => item.value),
+                type: type,
+                marker: {
+                    color: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#17a2b8']
+                }
+            }];
+            const layout = {
+                title: title,
+                height: 300,
+                autosize: true,
+                margin: { l: 40, r: 20, b: 60, t: 40 }
+            };
+            Plotly.newPlot(elementId, chartData, layout, {responsive: true});
+        }
+
+        fetch('{% url "api_report_data" report_type="patient" %}')
+            .then(response => response.json())
+            .then(data => {
+                const chartElement = document.getElementById('patientChart');
+                chartElement.innerHTML = '';
+                if (data.summary && data.summary.gender_data) {
+                    const gender_data = data.summary.gender_data.map(item => ({
+                        label: item.gender,
+                        value: item.count
+                    }));
+                    createPlotlyChart('patientChart', gender_data, 'Patient Gender Distribution', 'pie');
+                } else {
+                    chartElement.innerHTML = '<p class="text-center text-muted mt-5">No patient data available.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching patient data:', error);
+                document.getElementById('patientChart').innerHTML = '<p class="text-center text-danger mt-5">Error loading chart data.</p>';
+            });
+
+        fetch('{% url "api_report_data" report_type="financial" %}')
+            .then(response => response.json())
+            .then(data => {
+                const chartElement = document.getElementById('revenueChart');
+                chartElement.innerHTML = '';
+                if (data.payment_methods) {
+                    const method_data = data.payment_methods.map(item => ({
+                        label: item.method,
+                        value: item.total
+                    }));
+                    createPlotlyChart('revenueChart', method_data, 'Revenue by Payment Method', 'bar');
+                } else {
+                    chartElement.innerHTML = '<p class="text-center text-muted mt-5">No financial data available.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching financial data:', error);
+                document.getElementById('revenueChart').innerHTML = '<p class="text-center text-danger mt-5">Error loading chart data.</p>';
+            });
+    });
+</script>
+{% endblock %}

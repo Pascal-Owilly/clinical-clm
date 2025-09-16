@@ -12,7 +12,7 @@
             --accent-color: #F5A623; /* A warm orange for highlights */
             --text-dark: #333;
             --text-muted: #7f8c8d;
-            --bg-light: #f8f9fa;
+            --bg-light: #c4eaf3;
             /* --card-bg: #780206,#061161 !important; */
             --border-color: #e0e0e0;
             --shadow-light: rgba(0, 0, 0, 0.08);
@@ -41,7 +41,9 @@
 
         /* --- Custom Card Styles (for admin dashboard cards) --- */
         .custom-styled-card {
-            background: linear-gradient(to #780206,#061161) !important; 
+            /*background: linear-gradient(to #780206,#061161) !important; */
+            background-color: #f4f4f4;
+
             border: none;
             border-radius: 1.25rem; /* Softer, more pronounced rounded corners */
             box-shadow: 0 6px 20px var(--shadow-light); /* Subtle shadow */
@@ -76,7 +78,8 @@
             right: 0;
             bottom: 0;
             /* background: linear-gradient(45deg, var(--hover-gradient-start), var(--hover-gradient-end)); */
-            background: linear-gradient(45deg, blue, pink);
+            background: linear-gradient(45deg, rgb(188,219,115), rgb(140,140,141)) !important;
+
             opacity: 0; /* Initially hidden */
             transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             z-index: 1; /* Place behind the content */
@@ -93,7 +96,7 @@
         }
 
         .custom-styled-card .card-body {
-            padding: 1.5rem; 
+            padding: 1rem; 
             text-align: left; /* Align text to left */
             display: flex;
             flex-direction: column;
@@ -101,6 +104,7 @@
             height: 100%; /* Ensure body takes full height */
             position: relative;
             z-index: 2; /* Ensure content is above the pseudo-element */
+
         }
 
         /* Container for the icon and text */
@@ -151,7 +155,7 @@
         .custom-styled-card .card-body h5 {
             font-family: 'Roboto', sans-serif; /* Roboto for titles */
             font-weight: 600; /* Bolder title */
-            color: var(--text-dark); /* Darker initial color for clarity */
+            color: #8c8c8d; /* Darker initial color for clarity */
             margin-bottom: 0.25rem;
             font-size: 1.2rem; /* Slightly larger title font */
             transition: color 0.4s ease;
@@ -163,7 +167,7 @@
         .custom-styled-card .card-body h3.card-text-value { /* Specific class for value */
             font-family: 'Poppins', sans-serif; /* Poppins for main text */
             font-weight: 900; /* Ultra bold for data prominence */
-            color: var(--primary-color); /* Initial vibrant color */
+            color: #8c8c8d; /* Initial vibrant color */
             font-size: 2rem; /* Significantly larger font size */
             margin-bottom: 0.5rem; /* Add a bit more space below the value */
             line-height: 1.2;
@@ -177,6 +181,10 @@
 
         .display-greeting{
             font-size: 1.5rem;
+        }
+
+        .custom-styled-card:hover{
+            padding: 8px;
         }
 
         .custom-styled-card:hover .card-body h5 {
@@ -195,7 +203,7 @@
             top: 1.5rem; /* Move to top, adjust for padding */
             left: unset; /* Move to left, adjust for padding */
             transform: scale(1.05); /* Slight scale */
-            background: var(--card-bg); /* Change icon circle background to white */
+            background: #f3f3f3; /* Change icon circle background to white */
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -217,7 +225,7 @@
             border-bottom: none; /* Remove default header border */
             border-top-left-radius: 0.75rem !important;
             border-top-right-radius: 0.75rem !important;
-            padding: 1rem 1.25rem; /* Slightly more padding */
+            /*padding: 1rem 1.25rem; */
         }
         /* Custom background colors for Bootstrap card headers */
         .card-header.bg-info {
@@ -233,8 +241,8 @@
         .list-group-item {
             font-family: 'Roboto', sans-serif;
             border-color: var(--border-color); /* Use custom border color */
-            padding: 1rem 1.25rem; /* Slightly more padding for list items */
-            margin-bottom: 0.5rem; /* Add space between list items */
+            /*padding: 1rem 1.25rem; */
+            /*margin-bottom: 0.5rem; */
             border-radius: 0.5rem; /* Slightly rounded corners for list items */
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
             display: flex; /* Use flexbox for better alignment of content */

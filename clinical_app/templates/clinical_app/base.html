@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script> {# Ensure jQuery is loaded #}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     {% block extra_head %}{% endblock %}
 
@@ -41,6 +43,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background-color: #c4eaf3;
         }
 
         /* --- Navbar Styling --- */
@@ -110,9 +113,18 @@
 
 
         /* --- Sidebar Styling --- */
+
         .sidebar {
             width: var(--sidebar-collapsed-width); /* Default collapsed width */
-            background-image: linear-gradient(to bottom, #000046, #1CB5E0) !important; /* Light background for base HTML */            color: var(--text-light);
+            /*background-image: linear-gradient(to bottom, #000046, #1CB5E0) !important; */
+background: linear-gradient(135deg, #50c0e8, #a1d0e1);
+/*background: linear-gradient(135deg, #bcdb73, #d2e1a6);*/
+/*background: linear-gradient(135deg, #f4f4f4, #d4d4d4);*/
+/*background: linear-gradient(135deg, #50c0e8, #bcdb73);*/
+/*background: linear-gradient(135deg, #3c3c3d, #8c8c8d);*/
+
+
+            color: var(--text-light);
             height: 100vh;
             position: fixed;
             top: 0;
@@ -197,6 +209,30 @@
         .sidebar:not(.collapsed) .sidebar-header .nav-brand-text {
             opacity: 1; /* Show on expanded */
         }
+
+        .sidebar {
+  /*background: #3c3c3d;*/
+  color: #3c3c3d !important;
+}
+
+.sidebar a {
+  color: #f4f4f4;
+  padding: 12px 20px;
+  display: block;
+  text-decoration: none;
+}
+
+.sidebar a:hover {
+  background: linear-gradient(90deg, #50c0e8, #a1d0e1);
+  color: #ffffff;
+}
+
+.sidebar a.active {
+  background: linear-gradient(90deg, #bcdb73, #d2e1a6);
+  color: #3c3c3d;
+  font-weight: bold;
+}
+
 
 
         /* --- Main Content Area --- */
@@ -308,9 +344,14 @@
 <body style="padding: 30px;">
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-hospital-alt me-2"></i>
-            </a>
+<a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+  <img src="{% static 'images/logo.png' %}" 
+       alt="Logo" 
+       class="img-fluid"
+       style="max-height: 50px; width: auto;">
+</a>
+
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -396,7 +437,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="{% url 'report_dashboard' %}">
                         <i class="fas fa-chart-line fa-fw"></i>
                         <span class="nav-text">Reports</span>
                     </a>

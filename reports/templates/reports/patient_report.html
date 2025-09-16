@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Report</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .report-container { max-width: 900px; margin: 20px auto; padding: 30px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        h1, h2 { color: #0056b3; }
+        .report-header { text-align: center; margin-bottom: 30px; }
+        .date-range { font-style: italic; color: #666; text-align: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .no-data { text-align: center; padding: 20px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="report-container">
+    <div class="report-header">
+        <h1>Patient Report</h1>
+    </div>
+
+    <div class="date-range">
+        Report Period: From **{{ start_date|default:"Beginning" }}** to **{{ end_date|default:"Present" }}**
+    </div>
+
+    {% if patients %}
+        <h2>Patient Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Date of Birth</th>
+                    <th>Gender</th>
+                    <th>Encounters</th>
+                    <th>Last Encounter Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.id }}</td>
+                    <td>{{ patient.full_name }}</td>
+                    <td>{{ patient.date_of_birth|date:"F d, Y" }}</td>
+                    <td>{{ patient.gender }}</td>
+                    <td>{{ patient.encounter_count }}</td>
+                    <td>{{ patient.last_encounter_date|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-data">No patient data found for the selected date range and filters.</p>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

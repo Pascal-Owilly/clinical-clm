@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from reports import views as report_views
 # 
 urlpatterns = [
     # Auth URLs
@@ -192,5 +193,12 @@ urlpatterns = [
     path('imaging-results/<int:pk>/', views.ImagingResultDetailView.as_view(), name='imaging_result_detail'),
     path('imaging-results/<int:pk>/update/', views.ImagingResultUpdateView.as_view(), name='imaging_result_update'),
     path('imaging-results/<int:pk>/delete/', views.ImagingResultDeleteView.as_view(), name='imaging_result_delete'),
+
+    # Reports
+    path('reports/', report_views.report_dashboard, name='report_dashboard'),
+    path('reports/generate/<str:report_type>/', report_views.generate_report, name='generate_report'),
+    path('reports/list/', report_views.report_list, name='report_list'),
+    path('reports/view/<int:report_id>/', report_views.view_report, name='view_report'),
+    path('api/reports/<str:report_type>/', report_views.api_report_data, name='api_report_data'),
 
 ]
