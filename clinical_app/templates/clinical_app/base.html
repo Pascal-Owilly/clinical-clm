@@ -10,397 +10,199 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     {% block extra_head %}{% endblock %}
 
     <style>
-        /* --- Variables for easy color management (from previous response) --- */
         :root {
             --primary-purple: #6A057F;
             --secondary-blue: #0A1172;
             --accent-gold: #FFD700;
             --text-light: #f4f4f4;
             --text-dark: #333;
-            --card-bg-light: rgba(255, 255, 255, 0.1);
-            --card-bg-dark: rgba(0, 0, 0, 0.3);
-            --gradient-navbar: linear-gradient(90deg, var(--secondary-blue) 0%, #1A2182 100%); /* Darker blue for navbar */
-            --gradient-sidebar: linear-gradient(180deg, var(--primary-purple) 0%, #5A006B 100%); /* Darker purple for sidebar */
+            --sidebar-bg: linear-gradient(135deg, #50c0e8, #a1d0e1);
             --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
             --sidebar-expanded-width: 250px;
             --sidebar-collapsed-width: 80px;
         }
 
-        /* --- General Body and Layout Styling --- */
+        /* --- Main Layout: Flexbox Container --- */
         body {
-            font-family: 'Poppins', sans-serif; /* Modern, clean font */
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            color: var(--text-dark); /* Default text color, overridden by specific elements */
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            color: var(--text-dark);
+            overflow-x: hidden;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             background-color: #c4eaf3;
         }
-
-        /* --- Navbar Styling --- */
-        .navbar {
-            background-image: linear-gradient(to right, #fff, #fff) !important; /* Light background for base HTML */
-            backdrop-filter: blur(5px); /* Subtle blur */
-            padding: 15px 30px;
+        
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            width: var(--sidebar-collapsed-width);
+            background: var(--sidebar-bg);
+            color: var(--text-dark) !important;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
             box-shadow: var(--shadow-light);
-            z-index: 1020; /* Ensure it's above other elements */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1010;
         }
 
+        .sidebar.expanded {
+            width: var(--sidebar-expanded-width);
+        }
+
+        .sidebar .nav-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: none;
+        }
+
+        .sidebar.expanded .nav-text {
+            display: inline;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .sidebar .nav-link {
+            color: #f4f4f4;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            background: linear-gradient(90deg, #50c0e8, #a1d0e1);
+            color: #ffffff;
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(90deg, #bcdb73, #d2e1a6);
+            color: #3c3c3d;
+            font-weight: bold;
+        }
+
+        .sidebar .nav-link i {
+            width: 40px;
+            text-align: center;
+            margin-right: 10px;
+            color: var(--text-dark);
+            transition: color 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover i,
+        .sidebar .nav-link.active i {
+            color: var(--text-dark);
+        }
+
+        /* --- Navbar & Main Content --- */
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: var(--sidebar-collapsed-width);
+            transition: margin-left 0.3s ease;
+        }
+        
+        .navbar {
+            background: #fff !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 10px 15px; /* Reduced padding */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .main-content {
+            padding: 15px; /* Reduced padding */
+            flex-grow: 1;
+        }
+
+        /* --- Logo Styling for Sidebar Header --- */
+        .sidebar .logo {
+            max-height: 50px;
+            width: auto;
+            transition: transform 0.3s ease;
+        }
+        .sidebar.expanded .logo {
+            transform: scale(1.1);
+        }
+        
         .navbar-brand {
             font-weight: 700;
             font-size: 1.6em;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
         }
-
+        
         .navbar-brand i {
             color: blue;
             font-size: 30px;
         }
-
-        .navbar-toggler {
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-
-        .navbar-nav .nav-link {
-            color: var(--text-light);
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .navbar-nav .nav-link:hover {
-            color: var(--accent-gold);
-        }
-
+        
         .navbar-info {
-            color: var(--text-light);
-            font-size: 0.9em;
-            display: flex; /* Ensure it's a flex container */
-            align-items: center; /* Vertically align items */
-            gap: 15px; /* Space between elements */
-            margin-left: auto; /* Push to the right */
-            margin-right: 20px; /* Space from logout button */
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
         }
-
+        
         .navbar-info .current-time i {
-            margin-top: 50px;
-            color: var(--accent-gold); /* Golden clock icon */
-            right: 0 auto !important;
-        }
-
-        /* Adjust the placement of the current-time span for larger screens */
-        @media (min-width: 992px) {
-            .navbar-info {
-                position: absolute; /* Position absolutely to place it independently */
-                right: 250px; /* Adjust based on your right-aligned nav items */
-                top: 50%;
-                transform: translateY(-50%);
-            }
-        }
-
-
-        /* --- Sidebar Styling --- */
-
-        .sidebar {
-            width: var(--sidebar-collapsed-width); /* Default collapsed width */
-            /*background-image: linear-gradient(to bottom, #000046, #1CB5E0) !important; */
-background: linear-gradient(135deg, #50c0e8, #a1d0e1);
-/*background: linear-gradient(135deg, #bcdb73, #d2e1a6);*/
-/*background: linear-gradient(135deg, #f4f4f4, #d4d4d4);*/
-/*background: linear-gradient(135deg, #50c0e8, #bcdb73);*/
-/*background: linear-gradient(135deg, #3c3c3d, #8c8c8d);*/
-
-
-            color: var(--text-light);
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 80px; /* Space for fixed navbar */
-            box-shadow: var(--shadow-light);
-            transition: all 0.3s ease;
-            overflow-x: hidden; /* Hide horizontal scroll on collapse */
-            z-index: 1010; /* Below navbar, above content */
-        }
-
-        .sidebar.show { /* For mobile expanded state */
-            width: var(--sidebar-expanded-width);
-        }
-
-        .sidebar.collapsed .nav-text {
-            display: none;
-        }
-
-        .sidebar:not(.collapsed) .nav-text {
-             display: inline;
-        }
-
-        .sidebar .nav-item {
-            position: relative;
-        }
-
-        .sidebar .nav-link {
-            color: var(--text-light);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
             color: var(--accent-gold);
-            border-left: 5px solid var(--accent-gold);
-            padding-left: 15px; /* Adjust padding for border */
-        }
-
-        .sidebar .nav-link i {
-            font-size: 1.2em;
-            width: 40px; /* Fixed width for icons to align text */
-            text-align: center;
-            margin-right: 10px;
-            color: rgba(255, 255, 255, 0.7);
-            transition: color 0.3s ease;
-        }
-
-        .sidebar .nav-link:hover i,
-        .sidebar .nav-link.active i {
-            color: var(--accent-gold);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            display: flex;
-            justify-content: center; /* Center on collapsed, flex-start on expanded */
-            align-items: center;
-            height: 80px; /* Match navbar height for alignment */
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1; /* Ensure it's above other sidebar content if needed */
-        }
-
-        .sidebar-header .nav-brand-text {
-            color: var(--accent-gold);
-            font-size: 1.5em;
-            font-weight: 700;
-            white-space: nowrap;
-            opacity: 0; /* Hidden initially */
-            transition: opacity 0.3s ease;
-        }
-        .sidebar:not(.collapsed) .sidebar-header .nav-brand-text {
-            opacity: 1; /* Show on expanded */
-        }
-
-        .sidebar {
-  /*background: #3c3c3d;*/
-  color: #3c3c3d !important;
-}
-
-.sidebar a {
-  color: #f4f4f4;
-  padding: 12px 20px;
-  display: block;
-  text-decoration: none;
-}
-
-.sidebar a:hover {
-  background: linear-gradient(90deg, #50c0e8, #a1d0e1);
-  color: #ffffff;
-}
-
-.sidebar a.active {
-  background: linear-gradient(90deg, #bcdb73, #d2e1a6);
-  color: #3c3c3d;
-  font-weight: bold;
-}
-
-
-
-        /* --- Main Content Area --- */
-        .main-content {
-            margin-left: var(--sidebar-collapsed-width); /* Default margin for collapsed sidebar */
-            padding-top: 80px; /* Space for fixed navbar */
-            transition: margin-left 0.3s ease;
-            flex-grow: 1;
-        }
-
-        /* --- Bootstrap Overrides / Custom Card for Dashboard content --- */
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-title {
-            color: var(--secondary-blue); /* Blue title for cards */
-            font-weight: 600;
-        }
-
-        .card-text {
-            color: var(--text-dark);
-        }
-
-        .btn-outline-primary {
-            color: var(--primary-purple);
-            border-color: var(--primary-purple);
-        }
-        .btn-outline-primary:hover {
-            background-color: var(--primary-purple);
-            color: var(--text-light);
-        }
-
-        .btn-outline-success {
-            color: #28a745; /* Bootstrap green */
-            border-color: #28a745;
-        }
-        .btn-outline-success:hover {
-            background-color: #28a745;
-            color: var(--text-light);
-        }
-
-        .btn-outline-info {
-            color: #17a2b8; /* Bootstrap info blue */
-            border-color: #17a2b8;
-        }
-        .btn-outline-info:hover {
-            background-color: #17a2b8;
-            color: var(--text-light);
         }
 
         /* --- Responsive Design --- */
         @media (max-width: 992px) {
             .sidebar {
-                width: 0; /* Hidden by default on small screens */
-                left: -250px; /* Off-screen */
-                padding-top: 0; /* No padding from navbar when hidden */
+                width: 0;
+                transform: translateX(-100%);
             }
-
-            .sidebar.show {
-                width: var(--sidebar-expanded-width); /* Full width on show */
-                left: 0;
+            .sidebar.expanded {
+                width: var(--sidebar-expanded-width);
+                transform: translateX(0);
             }
-
-            .main-content {
-                margin-left: 0; /* No margin on small screens */
+            .main-container {
+                margin-left: 0;
             }
-
             .navbar-toggler {
-                display: block; /* Show toggler */
-            }
-
-            .navbar-info {
-                position: static; /* Remove absolute positioning */
-                margin-left: 0; /* Reset margin */
-                margin-right: 15px; /* Adjust spacing */
-                flex-grow: 1; /* Allow it to take available space */
-                justify-content: flex-end; /* Push to the right within navbar */
-            }
-        }
-
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.4em;
-            }
-            .navbar-info {
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .navbar-info {
-                font-size: 0.8em; /* Smaller font for time on very small screens */
-            }
-            .navbar-nav .nav-link {
-                padding: 8px 15px; /* Smaller padding for nav links */
+                display: block;
             }
         }
     </style>
 </head>
-<body style="padding: 30px;">
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
-        <div class="container-fluid">
-<a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-  <img src="{% static 'images/logo.png' %}" 
-       alt="Logo" 
-       class="img-fluid"
-       style="max-height: 50px; width: auto;">
-</a>
-
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="navbar-info d-none d-lg-flex"> {# Hidden on small screens, shown on large for fixed position #}
-                <span class="current-time text-info" id="currentTime"><i class="far fa-clock"></i>Loading Time...</span>
-            </div>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item d-lg-none"> {# Shown only on small screens #}
-                        <span class="nav-lin text-dark-50 current-time-mobile" id="currentTimeMobile"><i class="far fa-clock"></i>Loading Time...</span>
-                    </li>
-
-                    {% if user.is_authenticated %}
-                        
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-lin btn text-primary-50 btn btn-sm btn-outline-info">Logout</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-<div class="d-flex">
+<body>
     {% if user.is_authenticated %}
-    <div class="sidebar d-flex flex-column" id="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-hospital-alt me-2"></i><span class="nav-brand-text">HospConnect</span>
+            <a class="d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="img-fluid logo">
             </a>
         </div>
         <ul class="nav flex-column flex-grow-1">
-            <!-- Common -->
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-tachometer-alt fa-fw"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
-
             {% if user.user_type == 'admin' or user.user_type == 'reception' or user.user_type == 'doctor' or user.user_type == 'nurse' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -409,8 +211,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Admin -->
             {% if user.user_type == 'admin' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -443,8 +243,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Doctor -->
             {% if user.user_type == 'doctor' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -477,8 +275,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Nurse -->
             {% if user.user_type == 'nurse' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -486,12 +282,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                         <span class="nav-text">Triage Queue</span>
                     </a>
                 </li>
-              <!--   <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-procedures fa-fw"></i>
-                        <span class="nav-text">Inpatients</span>
-                    </a>
-                </li> -->
                 <li class="nav-item">
                     <a class="nav-link" href="#">
                         <i class="fas fa-pills fa-fw"></i>
@@ -499,8 +289,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Lab Tech -->
             {% if user.user_type == 'lab' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -521,8 +309,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Pharmacist -->
             {% if user.user_type == 'pharmacist' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -543,8 +329,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Cashier -->
             {% if user.user_type == 'cashier' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -565,8 +349,6 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     </a>
                 </li>
             {% endif %}
-
-            <!-- Reception -->
             {% if user.user_type == 'receptionist' %}
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -591,31 +373,57 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
     </div>
     {% endif %}
 
-    <!-- Main Content -->
-    <div class="main-content flex-grow-1">
-        {% block content %}
-        <div class="container mt-4">
-            <h1>Welcome to HospitalConnect</h1>
-            <p>This is a modern and responsive hospital management system. Use the sidebar to navigate through various modules.</p>
+    <div class="main-container" id="mainContainer">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-info d-none d-lg-flex">
+                    <span class="current-time text-info" id="currentTime"><i class="far fa-clock"></i>Loading Time...</span>
+                </div>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item d-lg-none">
+                            <span class="nav-link text-dark-50 current-time-mobile" id="currentTimeMobile"><i class="far fa-clock"></i>Loading Time...</span>
+                        </li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="nav-link btn text-dark btn-sm btn-outline-info">Logout</button>
+                                </form>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'login' %}">Login</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="main-content">
+            {% block content %}
+            <div class="container-fluid p-0">
+                <h1>Welcome to HospitalConnect</h1>
+                <p>This is a modern and responsive hospital management system. Use the sidebar to navigate through various modules.</p>
+            </div>
+            {% endblock %}
         </div>
-        {% endblock %}
     </div>
-</div>
-
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% block extra_js %}{% endblock %}
     <script>
-        // JavaScript for sidebar functionality
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const navbarToggler = document.querySelector('.navbar-toggler'); // Get the navbar toggler
-            const navTexts = sidebar.querySelectorAll('.nav-text'); // Get all nav-text spans
-            const sidebarHeader = sidebar.querySelector('.sidebar-header');
+            const mainContainer = document.getElementById('mainContainer');
+            const navTexts = sidebar.querySelectorAll('.nav-text');
+            const toggleButton = document.querySelector('.navbar-toggler');
 
-            // --- Time Update Function ---
             function updateCurrentTime() {
                 const now = new Date();
                 const options = {
@@ -627,120 +435,56 @@ background: linear-gradient(135deg, #50c0e8, #a1d0e1);
                     minute: '2-digit',
                     second: '2-digit',
                     hour12: true,
-                    timeZone: 'Africa/Nairobi' // East Africa Time (EAT)
+                    timeZone: 'Africa/Nairobi'
                 };
                 const formattedTime = `<i class="far fa-clock"></i> ${now.toLocaleString('en-US', options)}`;
-                
-                // Update time in both potential locations
-                const currentTimeDesktop = document.getElementById('currentTime');
-                if (currentTimeDesktop) {
-                    currentTimeDesktop.innerHTML = formattedTime;
-                }
+                document.getElementById('currentTime').innerHTML = formattedTime;
                 const currentTimeMobile = document.getElementById('currentTimeMobile');
                 if (currentTimeMobile) {
                     currentTimeMobile.innerHTML = formattedTime;
                 }
             }
 
-            // --- Sidebar Logic ---
             function applySidebarState() {
-                if (window.innerWidth > 992) { // Apply on large screens
-                    sidebar.classList.remove('collapsed', 'show'); // Ensure 'show' is removed
-                    sidebar.style.width = 'var(--sidebar-collapsed-width)';
-                    mainContent.style.marginLeft = 'var(--sidebar-collapsed-width)';
-                    sidebarHeader.style.justifyContent = 'center';
-                    navTexts.forEach(text => text.style.display = 'none'); // Hide text on collapse
-                } else { // Apply on small screens
-                    sidebar.classList.add('collapsed');
-                    sidebar.classList.remove('show'); // Ensure 'show' is initially removed
-                    sidebar.style.width = '0'; // Hidden
-                    mainContent.style.marginLeft = '0';
-                    sidebarHeader.style.justifyContent = 'center';
-                    navTexts.forEach(text => text.style.display = 'inline'); // Ensure text is visible in mobile menu
+                if (window.innerWidth > 992) {
+                    sidebar.classList.remove('expanded');
+                    mainContainer.style.marginLeft = 'var(--sidebar-collapsed-width)';
+                } else {
+                    sidebar.classList.remove('expanded');
+                    mainContainer.style.marginLeft = '0';
                 }
             }
 
-            // Initial state on load
             applySidebarState();
-            updateCurrentTime(); // Call immediately on load
-            setInterval(updateCurrentTime, 1000); // Update time every second
+            window.addEventListener('resize', applySidebarState);
 
-            // Handle hover for large screens only
             if (window.innerWidth > 992) {
                 sidebar.addEventListener('mouseenter', () => {
-                    sidebar.style.width = 'var(--sidebar-expanded-width)';
-                    mainContent.style.marginLeft = 'var(--sidebar-expanded-width)';
-                    sidebar.classList.remove('collapsed');
-                    sidebarHeader.style.justifyContent = 'flex-start';
-                    navTexts.forEach(text => text.style.display = 'inline'); // Show text on expand
+                    sidebar.classList.add('expanded');
+                    mainContainer.style.marginLeft = 'var(--sidebar-expanded-width)';
                 });
-
                 sidebar.addEventListener('mouseleave', () => {
-                    sidebar.style.width = 'var(--sidebar-collapsed-width)';
-                    mainContent.style.marginLeft = 'var(--sidebar-collapsed-width)';
-                    sidebar.classList.add('collapsed');
-                    sidebarHeader.style.justifyContent = 'center';
-                    navTexts.forEach(text => text.style.display = 'none'); // Hide text on collapse
+                    sidebar.classList.remove('expanded');
+                    mainContainer.style.marginLeft = 'var(--sidebar-collapsed-width)';
                 });
             }
 
-            // Responsive behavior for smaller screens using Bootstrap's offcanvas-like approach
-            if (navbarToggler) {
-                navbarToggler.addEventListener('click', () => {
+            if (toggleButton) {
+                toggleButton.addEventListener('click', () => {
                     if (window.innerWidth <= 992) {
-                        // Toggle 'show' class to control mobile sidebar visibility
-                        if (sidebar.classList.contains('show')) {
-                            sidebar.classList.remove('show');
-                            sidebar.style.width = '0';
-                        } else {
-                            sidebar.classList.add('show');
-                            sidebar.style.width = 'var(--sidebar-expanded-width)';
-                        }
+                        sidebar.classList.toggle('expanded');
                     }
                 });
             }
 
-            // Close sidebar when clicking outside on small screens
             document.addEventListener('click', function(event) {
-                if (window.innerWidth <= 992 && sidebar.classList.contains('show') &&
-                    !sidebar.contains(event.target) && (!navbarToggler || !navbarToggler.contains(event.target))) {
-                    sidebar.classList.remove('show');
-                    sidebar.style.width = '0';
+                if (window.innerWidth <= 992 && sidebar.classList.contains('expanded') && !sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+                    sidebar.classList.remove('expanded');
                 }
             });
 
-            // Adjust sidebar on window resize
-            window.addEventListener('resize', () => {
-                applySidebarState();
-                // Re-evaluate hover listeners on resize, needed if going from small to large or vice versa
-                if (window.innerWidth > 992) {
-                    sidebar.addEventListener('mouseenter', () => {
-                        sidebar.style.width = 'var(--sidebar-expanded-width)';
-                        mainContent.style.marginLeft = 'var(--sidebar-expanded-width)';
-                        sidebar.classList.remove('collapsed');
-                        sidebarHeader.style.justifyContent = 'flex-start';
-                        navTexts.forEach(text => text.style.display = 'inline');
-                    });
-                    sidebar.addEventListener('mouseleave', () => {
-                        sidebar.style.width = 'var(--sidebar-collapsed-width)';
-                        mainContent.style.marginLeft = 'var(--sidebar-collapsed-width)';
-                        sidebar.classList.add('collapsed');
-                        sidebarHeader.style.justifyContent = 'center';
-                        navTexts.forEach(text => text.style.display = 'none');
-                    });
-                } else {
-                    // Remove hover listeners for small screens to prevent conflicts
-                    sidebar.removeEventListener('mouseenter', null); // Need to store reference to remove
-                    sidebar.removeEventListener('mouseleave', null); // Need to store reference to remove
-                }
-            });
-
-            // For initial load, ensure nav-text is hidden if on a large screen
-            if (window.innerWidth > 992) {
-                navTexts.forEach(text => {
-                    text.style.display = 'none';
-                });
-            }
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
         });
     </script>
 </body>
