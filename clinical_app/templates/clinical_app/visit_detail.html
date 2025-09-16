@@ -1,0 +1,65 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block title %}Visit Details{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-info text-white text-center py-4">
+                    <h2 class="mb-0 fw-bold">Visit Details</h2>
+                    <p class="mb-0">Full information about this visit</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Patient</th>
+                                <td>{{ visit.patient.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Doctor</th>
+                                <td>{{ visit.doctor.user.get_full_name|default:visit.doctor.user.username }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Reason for Visit</th>
+                                <td>{{ visit.reason }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Status</th>
+                                <td>
+                                    <span class="badge 
+                                        {% if visit.status == 'pending' %} bg-warning
+                                        {% elif visit.status == 'ongoing' %} bg-primary
+                                        {% elif visit.status == 'completed' %} bg-success
+                                        {% else %} bg-secondary {% endif %}">
+                                        {{ visit.status|capfirst }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Visit Date</th>
+                                <td>{{ visit.visit_date|date:"F d, Y P" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer text-center">
+                    <a href="{% url 'visit_list' visit.patient.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Visits
+                    </a>
+                    <a href="{% url 'visit_edit' visit.id %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> Edit Visit
+                    </a>
+                    <a href="" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Delete Visit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

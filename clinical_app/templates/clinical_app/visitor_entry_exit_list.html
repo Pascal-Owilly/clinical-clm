@@ -1,0 +1,337 @@
+{% extends 'clinical_app/base.html' %}
+{% load custom_filters %} {# This line is crucial! #}
+
+{% block title %}Visitor Entries & Exits{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* General styling for the page */
+        body {
+            background-color: #f8f9fa; /* Light background */
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        h1 {
+            color: #007bff; /* Primary blue for headings */
+            font-weight: 600;
+        }
+
+        .card {
+            border-radius: 0.75rem; /* Rounded corners for cards */
+            border: none;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08); /* Soft shadow */
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background-color: #e9f5ff; /* Light blue header for filter/search card */
+            border-bottom: 1px solid #d1e7ff;
+            font-weight: 500;
+            color: #007bff;
+            border-radius: 0.75rem 0.75rem 0 0;
+            padding: 1rem 1.5rem;
+        }
+
+        .btn-primary, .btn-success {
+            border-radius: 0.5rem;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+        }
+        .btn-sm {
+            border-radius: 0.3rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        /* Form elements styling */
+        .form-control, .form-select {
+            border-radius: 0.5rem;
+            border: 1px solid #ced4da;
+            padding: 0.65rem 1rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Table styling */
+        .table {
+            background-color: #fff;
+            border-radius: 0.75rem;
+            overflow: hidden; /* Ensures rounded corners apply */
+            border-collapse: separate; /* Required for border-radius on table */
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background-color: #f1f3f5; /* Light grey header */
+            color: #495057;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            padding: 1rem 1.25rem;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .table tbody tr:hover {
+            background-color: #e2f2ff; /* Light blue on hover for rows */
+        }
+
+        .table tbody td {
+            padding: 1rem 1.25rem;
+            vertical-align: middle;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.4em 0.7em;
+            border-radius: 0.35rem;
+            font-weight: 600;
+        }
+
+        /* Action buttons in table */
+        .btn-group .btn {
+            margin-right: 0.25rem;
+        }
+        .btn-group .btn:last-child {
+            margin-right: 0;
+        }
+
+        /* Pagination styling */
+        .pagination .page-item .page-link {
+            border-radius: 0.5rem;
+            margin: 0 0.25rem;
+            border: 1px solid #dee2e6;
+            color: #007bff;
+            transition: all 0.2s;
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: #fff;
+        }
+
+        .alert-info {
+            border-radius: 0.75rem;
+            background-color: #e0f2f7;
+            color: #0f6674;
+            border-color: #b3e0e7;
+            padding: 1.5rem;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5 fw-bold text-primary"><i class="bi bi-person-lines-fill me-3"></i>Visitor Entry/Exit Records</h1>
+        <a href="{% url 'visitor_entry_exit_create' %}" class="btn btn-success btn-lg shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i>Record New Event
+        </a>
+    </div>
+
+    {# Search and Filter Card #}
+    <div class="card shadow-sm mb-5">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-funnel-fill me-2"></i>Filter & Search Options</h5>
+            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="bi bi-sliders me-1"></i> Toggle Filters
+            </button>
+        </div>
+        <div class="collapse show" id="filterCollapse"> {# 'show' to make it open by default #}
+            <div class="card-body">
+                <form method="GET" action="{% url 'visitor_entry_exit_list' %}" class="row g-3 align-items-end">
+                    {# Search Input #}
+                    <div class="col-md-4">
+                        <label for="id_search_query" class="form-label visually-hidden">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" id="id_search_query" name="q"
+                                   placeholder="Search by name, patient, contact, reason..."
+                                   value="{{ current_search_query }}">
+                        </div>
+                    </div>
+
+                    {# Event Type Filter #}
+                    <div class="col-md-3">
+                        <label for="id_event_type" class="form-label">Event Type</label>
+                        <select class="form-select" id="id_event_type" name="event_type">
+                            <option value="">All Types</option>
+                            <option value="entry" {% if current_event_type == 'entry' %}selected{% endif %}>Entry</option>
+                            <option value="exit" {% if current_event_type == 'exit' %}selected{% endif %}>Exit</option>
+                        </select>
+                    </div>
+
+                    {# Patient Filter (Dropdown or Autocomplete if you have many patients) #}
+                    <div class="col-md-5">
+                        <label for="id_patient" class="form-label">Related Patient</label>
+                        <select class="form-select" id="id_patient" name="patient">
+                            <option value="">All Patients</option>
+                            {% for patient in patients %}
+                                <option value="{{ patient.pk }}" {% if current_patient_id|stringformat:"s" == patient.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ patient.user.get_full_name }} (ID: {{ patient.patient_id }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {# Date Range Filter #}
+                    <div class="col-md-4">
+                        <label for="id_date_filter" class="form-label">Date Filter</label>
+                        <select class="form-select" id="id_date_filter" name="date_filter">
+                            <option value="">All Dates</option>
+                            <option value="today" {% if current_date_filter == 'today' %}selected{% endif %}>Today</option>
+                            <option value="last_7_days" {% if current_date_filter == 'last_7_days' %}selected{% endif %}>Last 7 Days</option>
+                            <option value="last_30_days" {% if current_date_filter == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                            <option value="custom" {% if current_date_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                        </select>
+                    </div>
+
+                    {# Custom Date Range Inputs (initially hidden) #}
+                    <div class="col-md-4" id="custom_date_start_div" style="display: {% if current_date_filter == 'custom' %}block{% else %}none{% endif %};">
+                        <label for="id_start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="id_start_date" name="start_date" value="{{ current_start_date }}">
+                    </div>
+                    <div class="col-md-4" id="custom_date_end_div" style="display: {% if current_date_filter == 'custom' %}block{% else %}none{% endif %};">
+                        <label for="id_end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="id_end_date" name="end_date" value="{{ current_end_date }}">
+                    </div>
+
+                    {# Action Buttons #}
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-filter me-2"></i>Apply Filters</button>
+                        <a href="{% url 'visitor_entry_exit_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-circle me-2"></i>Clear Filters</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Table of Records #}
+    {% if entries %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0"> {# Remove card-body padding to make table fit snugly #}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0"> {# Added mb-0 to remove bottom margin #}
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type</th>
+                                <th>Visitor Name</th>
+                                <th>Patient (if any)</th>
+                                <th>Contact</th>
+                                <th>Reason</th>
+                                <th>Timestamp</th>
+                                <th>Recorded By</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in entries %}
+                                <tr>
+                                    <td><span class="badge rounded-pill {% if entry.event_type == 'entry' %}bg-primary{% else %}bg-secondary{% endif %}">{{ entry.get_event_type_display }}</span></td>
+                                    <td>{{ entry.visitor_name|default:"N/A" }}</td>
+                                    <td>
+                                        {% if entry.related_patient %}
+                                            <a href="{% url 'patient_detail' entry.related_patient.pk %}" class="text-decoration-none text-primary fw-bold">
+                                                {{ entry.related_patient.user.get_full_name }} <br><small class="text-muted">(ID: {{ entry.related_patient.patient_id }})</small>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.visitor_contact|default:"N/A" }}</td>
+                                    <td>{{ entry.reason_for_visit|truncatechars:50|default:"N/A" }}</td>
+                                    <td><small>{{ entry.timestamp|date:"M d, Y" }}</small><br><small class="text-muted">{{ entry.timestamp|date:"H:i" }}</small></td>
+                                    <td>
+                                        {% if entry.recorded_by %}
+                                            {{ entry.recorded_by.get_full_name|default:entry.recorded_by.username }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Entry Actions">
+                                            <a href="{% url 'visitor_entry_exit_detail' entry.pk %}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details"><i class="bi bi-eye"></i></a>
+                                            <a href="{% url 'visitor_entry_exit_update' entry.pk %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Record"><i class="bi bi-pencil"></i></a>
+                                            <a href="{% url 'visitor_entry_exit_delete' entry.pk %}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete Record"><i class="bi bi-trash"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Pagination #}
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode | remove_page_param }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span> Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode | remove_page_param }}" aria-label="Next">
+                                Next <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-info text-center shadow-sm" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-info-circle me-2"></i>No records found!</h4>
+            <p>No visitor entry/exit records match your current criteria. Try adjusting your filters or search terms.</p>
+            <hr>
+            <a href="{% url 'visitor_entry_exit_list' %}" class="btn btn-outline-info"><i class="bi bi-arrow-counterclockwise me-2"></i>Reset Filters</a>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // JavaScript to toggle custom date range inputs based on selection
+        document.addEventListener('DOMContentLoaded', function() {
+            var dateFilterSelect = document.getElementById('id_date_filter');
+            var customStartDateDiv = document.getElementById('custom_date_start_div');
+            var customEndDateDiv = document.getElementById('custom_date_end_div');
+
+            function toggleCustomDateInputs() {
+                if (dateFilterSelect.value === 'custom') {
+                    customStartDateDiv.style.display = 'block';
+                    customEndDateDiv.style.display = 'block';
+                } else {
+                    customStartDateDiv.style.display = 'none';
+                    customEndDateDiv.style.display = 'none';
+                }
+            }
+
+            dateFilterSelect.addEventListener('change', toggleCustomDateInputs);
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        });
+    </script>
+    {# Custom Django filter for pagination: removes 'page' param #}
+    {% load tz %} {# If you use timezone, make sure this is loaded in your custom_filters.py if it's not already global #}
+    {% load custom_filters %} {# Make sure your custom_filters are loaded #}
+{% endblock %}

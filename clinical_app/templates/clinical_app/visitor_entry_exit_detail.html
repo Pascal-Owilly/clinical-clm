@@ -1,0 +1,54 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block title %}Visitor Event: {{ entry.id }}{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h1 class="card-title mb-0">Visitor Event Details (ID: {{ entry.id }})</h1>
+            <div>
+                <a href="{% url 'visitor_entry_exit_update' entry.pk %}" class="btn btn-warning btn-sm me-2">Edit</a>
+                <a href="{% url 'visitor_entry_exit_delete' entry.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Event Type:</div>
+                <div class="col-md-8"><strong>{{ entry.get_event_type_display }}</strong></div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Visitor Name:</div>
+                <div class="col-md-8">{{ entry.visitor_name|default:"N/A" }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Visitor Contact:</div>
+                <div class="col-md-8">{{ entry.visitor_contact|default:"N/A" }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Related Patient:</div>
+                <div class="col-md-8">
+                    {% if entry.related_patient %}
+                        <a href="{% url 'patient_detail' entry.related_patient.pk %}">{{ entry.related_patient.user.get_full_name }} (ID: {{ entry.related_patient.patient_id }})</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Reason for Visit:</div>
+                <div class="col-md-8">{{ entry.reason_for_visit|default:"N/A" }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Timestamp:</div>
+                <div class="col-md-8">{{ entry.timestamp|date:"F j, Y, P" }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-4 text-muted">Recorded By:</div>
+                <div class="col-md-8">{{ entry.recorded_by.get_full_name|default:entry.recorded_by.username }}</div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'visitor_entry_exit_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+{% endblock %}

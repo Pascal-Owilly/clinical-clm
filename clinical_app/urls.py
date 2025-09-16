@@ -1,0 +1,196 @@
+from django.urls import path
+from django.contrib.auth import views as auth_views
+from . import views
+# 
+urlpatterns = [
+    # Auth URLs
+    path('login/', auth_views.LoginView.as_view(template_name='clinical_app/user_management/user_login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
+    path('register/', views.select_user_type, name='select_user_type'),
+    path('register/<str:user_type>/', views.UserRegistrationView.as_view(), name='register_by_type'),
+
+    path('users/', views.UserListView.as_view(), name='user_list'),
+    path('users/<int:pk>/', views.UserDetailView.as_view(), name='user_detail'),
+    path('users/<int:pk>/update/', views.UserUpdateView.as_view(), name='user_update'),
+    path('users/<int:pk>/delete/', views.UserDeleteView.as_view(), name='user_delete'),
+    path('', views.HomeView.as_view(), name='home'),
+    path('visitors-and-billing/', views.visitors_and_billing_view, name='visitors_and_billing'),
+
+    # API endpoints for Billing and Entry
+    # path('api/record_entry/', views.record_entry_exit_api, name='api_record_entry'),
+    # path('api/record_exit/', views.record_entry_exit_api, name='api_record_exit'),
+    # path('api/add_bill/', views.add_bill_api, name='api_add_bill'),
+
+    # --- Visitor Entry/Exit URLs ---
+    path('visitors/', views.VisitorEntryExitListView.as_view(), name='visitor_entry_exit_list'),
+    path('visitors/<int:pk>/', views.VisitorEntryExitDetailView.as_view(), name='visitor_entry_exit_detail'),
+    path('visitors/new/', views.VisitorEntryExitCreateView.as_view(), name='visitor_entry_exit_create'),
+    path('visitors/<int:pk>/edit/', views.VisitorEntryExitUpdateView.as_view(), name='visitor_entry_exit_update'),
+    path('visitors/<int:pk>/delete/', views.VisitorEntryExitDeleteView.as_view(), name='visitor_entry_exit_delete'),
+
+    # --- Billing URLs ---
+    path('billing/', views.BillingListView.as_view(), name='billing_list'),
+    path('billing/<int:pk>/', views.BillingDetailView.as_view(), name='billing_detail'),
+    path('encounter/<int:encounter_pk>/billing/new/', views.BillingCreateView.as_view(), name='create_billing_for_encounter'),
+    path('billing/<int:pk>/edit/', views.BillingUpdateView.as_view(), name='billing_update'),
+    path('billing/<int:pk>/delete/', views.BillingDeleteView.as_view(), name='billing_delete'),
+    path('billing/<int:pk>/mark-paid/', views.BillingMarkAsPaidView.as_view(), name='billing_mark_paid'), # For marking as paid
+
+
+    # Patient URLs
+    path('patients/', views.PatientListView.as_view(), name='patient_list'),
+    # path('patients/create/', views.PatientCreateView.as_view(), name='patient_create'),
+    path('patient/create/', views.PatientProfileCreationView.as_view(), name='create_patient_profile'),
+    path('patients/<int:pk>/', views.PatientDetailView.as_view(), name='patient_detail'),
+    path('patients/<int:pk>/update/', views.PatientUpdateView.as_view(), name='patient_update'),
+    path('patients/<int:patient_pk>/add_consent/', views.ConsentFormCreateView.as_view(), name='consent_create'),
+    path('consent_forms/<int:pk>/sign/', views.SignConsentFormView.as_view(), name='sign_consent_form'),
+    path('patients/<int:patient_pk>/add_history/', views.MedicalHistoryCreateView.as_view(), name='medical_history_create'),
+    path("patients/<int:patient_id>/created/", views.PatientCreatedPromptView.as_view(), name="patient_created_prompt"),
+    path("patients/<int:patient_id>/visit/create/", views.VisitCreationView.as_view(), name="visit_create"),
+    path(
+        "patients/<int:patient_id>/visits/",
+        views.VisitListView.as_view(),
+        name="visit_list",
+    ),
+    path("visits/", views.AllVisitListView.as_view(), name="all_visit_list"),
+
+    path("patients/<int:patient_id>/visits/", views.VisitListView.as_view(), name="visit_list"),
+    path("visits/<int:pk>/", views.VisitDetailView.as_view(), name="visit_detail"),
+    path("visits/<int:pk>/edit/", views.VisitUpdateView.as_view(), name="visit_edit"),
+
+    # Doctor URLs
+    path('doctors/', views.DoctorListView.as_view(), name='doctor_list'),
+    path('doctor/<int:pk>/', views.DoctorDetailView.as_view(), name='doctor_detail'),
+    path('doctors/<int:pk>/update/', views.DoctorUpdateView.as_view(), name='doctor_update'),
+    path('doctors/<int:pk>/delete/', views.DoctorDeleteView.as_view(), name='doctor_delete'),
+
+    # Encounter URLs
+    path('encounters/create/', views.EncounterCreateView.as_view(), name='encounter_create'),
+    path('encounters/<int:pk>/', views.EncounterDetailView.as_view(), name='encounter_detail'),
+
+    # Insurance
+    path('insurances/', views.insurance_list, name='insurance_list'),
+    path('insurances/create/', views.insurance_create, name='insurance_create'),
+    path('insurances/<int:pk>/edit/', views.insurance_update, name='insurance_update'),
+    path('insurances/<int:pk>/delete/', views.insurance_delete, name='insurance_delete'),
+
+    # Encounter Sub-Form URLs (related to a specific encounter)
+    path('patients/<int:patient_pk>/vitals/add/', views.VitalSignCreateView.as_view(), name='vitals_create'),    path('encounters/<int:encounter_pk>/physical_exam/add/', views.PhysicalExaminationCreateView.as_view(), name='physical_exam_create'),
+    path('encounters/<int:encounter_pk>/diagnosis/add/', views.DiagnosisCreateView.as_view(), name='diagnosis_create'),
+    path('encounters/<int:encounter_pk>/treatment_plan/add/', views.TreatmentPlanCreateView.as_view(), name='treatment_plan_create'),
+    path('encounters/<int:encounter_pk>/lab_request/add/', views.LabTestRequestCreateView.as_view(), name='lab_request_create'),
+    path('lab_requests/<int:lab_request_pk>/result/add/', views.LabTestResultCreateView.as_view(), name='lab_result_create'),
+    path('encounters/<int:encounter_pk>/imaging_request/add/', views.ImagingRequestCreateView.as_view(), name='imaging_request_create'),
+    path('imaging_requests/<int:imaging_request_pk>/result/add/', views.ImagingResultCreateView.as_view(), name='imaging_result_create'),
+    path('encounters/<int:encounter_pk>/prescription/add/', views.PrescriptionCreateView.as_view(), name='prescription_create'),
+
+    # What has been done to the patient 
+    path('encounters/<int:encounter_pk>/clinical_note/add/',
+         views.ClinicalNoteCreateView.as_view(),
+         name='clinical_note_create'),
+    path('encounters/<int:encounter_pk>/clinical_note/<int:pk>/',
+         views.ClinicalNoteDetailView.as_view(),
+         name='clinical_note_detail'),
+    path('encounters/<int:encounter_pk>/clinical_note/<int:pk>/edit/',
+         views.ClinicalNoteUpdateView.as_view(),
+         name='clinical_note_update'),
+
+    # --- Department URLs ---
+    path('departments/', views.DepartmentListView.as_view(), name='department_list'),
+    path('departments/create/', views.DepartmentCreateView.as_view(), name='department_create'),
+    path('departments/<int:pk>/update/', views.DepartmentUpdateView.as_view(), name='department_update'),
+    path('departments/<int:pk>/delete/', views.DepartmentDeleteView.as_view(), name='department_delete'),
+
+    # Ward and bed
+    path('wards/', views.WardListView.as_view(), name='ward_list'),
+    path('wards/create/', views.WardCreateView.as_view(), name='ward_create'),
+    path('wards/<int:pk>/', views.WardDetailView.as_view(), name='ward_detail'),
+    path('wards/<int:pk>/update/', views.WardUpdateView.as_view(), name='ward_update'),
+    path('wards/<int:pk>/delete/', views.WardDeleteView.as_view(), name='ward_delete'),
+    path('wards/<int:ward_pk>/beds/create/', views.BedCreateView.as_view(), name='bed_create'),
+    path('beds/<int:pk>/', views.BedDetailView.as_view(), name='bed_detail'),
+    path('beds/<int:pk>/update/', views.BedUpdateView.as_view(), name='bed_update'),
+    path('beds/<int:pk>/delete/', views.BedDeleteView.as_view(), name='bed_delete'),
+
+    # Case summary
+    path('encounters/<int:pk>/generate-summary/', views.GenerateCaseSummaryView.as_view(), name='generate_case_summary'),
+    path('case-summaries/<int:pk>/', views.CaseSummaryDetailView.as_view(), name='case_summary_detail'),
+    path('case-summary/<int:pk>/sign/', views.SignCaseSummaryView.as_view(), name='sign_case_summary'),
+
+    # path('summary/<int:pk>/sign/', views.sign_case_summary, name='sign_case_summary'),
+    # Doctor-specific URLs
+    path('doctor/my_patients/', views.DoctorPatientListView.as_view(), name='doctor_patient_list'),
+
+    # Logs
+    path('activity-logs/', views.ActivityLogListView.as_view(), name='activity_log_list'),
+
+    # Lab
+    path('lab_requests/<int:lab_request_pk>/record_result/', views.LabTestResultCreateView.as_view(), name='record_lab_result'),
+    path('lab_requests/', views.LabTestResultCreateView.as_view(), name='record_lab_result'),
+
+    # Appointment paths
+    path('appointments/', views.AppointmentListView.as_view(), name='appointment_list'),
+    path('appointments/calendar/', views.AppointmentCalendarView.as_view(), name='appointment_calendar'),
+    path('api/appointments/', views.AppointmentAPIView.as_view(), name='appointment_api'),
+
+    path('appointment/<int:pk>/', views.AppointmentDetailView.as_view(), name='appointment_detail'),
+    path('appointment/<int:pk>/delete/', views.AppointmentDeleteView.as_view(), name='appointment_delete'),
+    path('appointment/<int:pk>/update/', views.AppointmentUpdateView.as_view(), name='appointment_update'),
+    path('appointments/create/', views.AppointmentCreateView.as_view(), name='appointment_create'),
+    path('ajax/search_patients/', views.search_patients_ajax, name='search_patients_ajax'),
+    path('ajax/search_doctors/', views.search_doctors_ajax, name='search_doctors_ajax'),
+
+    # Medication URLs
+    path('medications/', views.MedicationInventoryView.as_view(), name='medication_inventory_list'),
+    path('medications/new/', views.MedicationCreateView.as_view(), name='medication_create'),
+    path('medications/<int:pk>/', views.MedicationDetailView.as_view(), name='medication_detail'),
+    path('medications/<int:pk>/update/', views.MedicationUpdateView.as_view(), name='medication_update'),
+    path('medications/<int:pk>/delete/', views.MedicationDeleteView.as_view(), name='medication_delete'),
+
+    # Birth records
+    path('birth-records/', views.BirthRecordsListView.as_view(), name='birth_records_list'),
+    path('birth-records/new/', views.BirthRecordCreateView.as_view(), name='birth_record_create'),
+    path('birth-records/<int:pk>/', views.BirthRecordDetailView.as_view(), name='birth_record_detail'),
+    path('birth-records/<int:pk>/update/', views.BirthRecordUpdateView.as_view(), name='birth_record_update'),
+    path('birth-records/<int:pk>/delete/', views.BirthRecordDeleteView.as_view(), name='birth_record_delete'),
+
+    # --- Mortality Records URLs ---
+    path('mortality-records/', views.MortalityRecordsListView.as_view(), name='mortality_records_list'),
+    path('mortality-records/new/', views.MortalityRecordCreateView.as_view(), name='mortality_record_create'),
+    path('mortality-records/<int:pk>/', views.MortalityRecordDetailView.as_view(), name='mortality_record_detail'),
+    path('mortality-records/<int:pk>/update/', views.MortalityRecordUpdateView.as_view(), name='mortality_record_update'),
+    path('mortality-records/<int:pk>/delete/', views.MortalityRecordDeleteView.as_view(), name='mortality_record_delete'),
+
+    # Cancer Registry Report URLs
+    path('cancer-reports/', views.CancerRegistryReportsListView.as_view(), name='cancer_reports_list'),
+    path('cancer-reports/new/', views.CancerRegistryReportCreateView.as_view(), name='cancer_report_create'),
+    path('cancer-reports/<int:pk>/', views.CancerRegistryReportDetailView.as_view(), name='cancer_report_detail'),
+    path('cancer-reports/<int:pk>/update/', views.CancerRegistryReportUpdateView.as_view(), name='cancer_report_update'),
+    path('cancer-reports/<int:pk>/delete/', views.CancerRegistryReportDeleteView.as_view(), name='cancer_report_delete'),
+    
+    # Imaging Requests URLs (General list/detail/update/delete)
+    path('imaging-requests/', views.ImagingRequestListView.as_view(), name='imaging_requests_list'), 
+    path('imaging-requests/<int:pk>/', views.ImagingRequestDetailView.as_view(), name='imaging_request_detail'),
+
+    # Lab test Result URLs (General list/detail/update/delete)
+
+    # --- Placeholder for Lab Test Request URLs (highly recommended to have) ---
+    path('lab-requests/', views.LabTestRequestListView.as_view(), name='lab_test_requests_list'),
+    path('lab-requests/<int:pk>/', views.LabTestRequestDetailView.as_view(), name='lab_test_request_detail'),
+    path('lab-requests/<int:pk>/update/', views.LabTestRequestUpdateView.as_view(), name='lab_test_request_update'),
+    path('lab-requests/<int:pk>/delete/', views.LabTestRequestDeleteView.as_view(), name='lab_test_request_delete'),
+    
+    path('lab-results/', views.LabTestResultListView.as_view(), name='lab_test_results_list'),
+    path('lab-results/<int:pk>/', views.LabTestResultDetailView.as_view(), name='lab_test_result_detail'),
+    path('lab-results/request/<int:lab_test_request_pk>/new/', views.LabTestResultCreateView.as_view(), name='lab_test_result_create'),
+    path('lab-results/<int:pk>/update/', views.LabTestResultUpdateView.as_view(), name='lab_test_result_update'),
+    path('lab-results/<int:pk>/delete/', views.LabTestResultDeleteView.as_view(), name='lab_test_result_delete'),
+
+    # Imaging Result URLs (General list/detail/update/delete)
+    path('imaging-results/', views.ImagingResultListView.as_view(), name='imaging_results_list'),
+    path('imaging-results/<int:pk>/', views.ImagingResultDetailView.as_view(), name='imaging_result_detail'),
+    path('imaging-results/<int:pk>/update/', views.ImagingResultUpdateView.as_view(), name='imaging_result_update'),
+    path('imaging-results/<int:pk>/delete/', views.ImagingResultDeleteView.as_view(), name='imaging_result_delete'),
+
+]

@@ -1,0 +1,322 @@
+{% extends "clinical_app/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary: #3a6ea5;
+            --primary-light: #6a93c3;
+            --primary-dark: #2a4e7a;
+            --secondary: #6c757d;
+            --accent: #5cb85c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --danger: #d9534f;
+            --warning: #f0ad4e;
+            --info: #5bc0de;
+            --success: #5cb85c;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: #f5f7f9;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Make container full width and add padding */
+        .container-fluid {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .calendar-container {
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        /* FullCalendar customization */
+        .fc {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fc-toolbar {
+            text-transform: uppercase;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .fc-button {
+            background-color: var(--primary) !important;
+            border: none !important;
+            border-radius: var(--border-radius) !important;
+            transition: var(--transition) !important;
+            font-weight: 500 !important;
+            text-transform: capitalize !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+
+        .fc-button:hover {
+            background-color: var(--primary-dark) !important;
+            transform: translateY(-2px);
+        }
+
+        .fc-button-active {
+            background-color: var(--primary-dark) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .fc-button-primary:not(:disabled).fc-button-active, 
+        .fc-button-primary:not(:disabled):active {
+            background-color: var(--primary-dark) !important;
+        }
+
+        .fc-daygrid-day-number, 
+        .fc-col-header-cell-cushion {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .fc-day-today {
+            background-color: rgba(58, 110, 165, 0.1) !important;
+        }
+
+        .fc-event {
+            border-radius: 4px;
+            border: none;
+            padding: 2px 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .fc-event:hover {
+            opacity: 0.9;
+        }
+
+        .fc-daygrid-event-dot {
+            border-color: var(--primary-dark) !important;
+        }
+
+        /* Specific button styling */
+        .fc-newAppointment-button {
+            background-color: var(--success) !important;
+        }
+        
+        .fc-viewAllAppointments-button {
+            background-color: var(--info) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .fc-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .fc-toolbar-chunk {
+                margin-bottom: 0.5rem;
+            }
+            
+            .calendar-container {
+                padding: 1rem;
+            }
+        }
+        
+        /* New badge styling */
+        .event-badge {
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 0.2em 0.5em;
+            border-radius: 0.25rem;
+            margin-left: 0.5em;
+            vertical-align: middle;
+        }
+        .event-title {
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .status-scheduled { background-color: #28a745; color: white; }
+        .status-completed { background-color: #6c757d; color: white; }
+        .status-cancelled { background-color: #dc3545; color: white; }
+        .status-rescheduled { background-color: #ffc107; color: black; }
+        .status-no_show { background-color: #fd7e14; color: black; }
+
+    </style>
+{% endblock %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1>{{ title }}</h1>
+                <div id="calendar" class="calendar-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createAppointmentModal" tabindex="-1" aria-labelledby="createAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createAppointmentModalLabel">
+                        <i class="fas fa-calendar-plus me-2 text-primary"></i>
+                        Schedule New Appointment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="lead">Do you want to create a new appointment for:</p>
+                    <h4 id="selectedDateDisplay" class="text-primary fw-bold"></h4>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="#" id="createAppointmentLink" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i> Create Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var createAppointmentModal = new bootstrap.Modal(document.getElementById('createAppointmentModal'));
+            var selectedDateDisplay = document.getElementById('selectedDateDisplay');
+            var createAppointmentLink = document.getElementById('createAppointmentLink');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'newAppointment viewAllAppointments dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                eventSources: [
+                    {
+                        url: '{% url "appointment_api" %}',
+                        method: 'GET',
+                        failure: function() {
+                            alert('There was an error while fetching appointments!');
+                        },
+                        // We need to fetch the status in the JSON response
+                        // from the server to use it in eventContent.
+                        // Assuming the server response now includes 'status' field.
+                    }
+                ],
+                eventClick: function(info) {
+                    window.location.href = info.event.url;
+                },
+                customButtons: {
+                    newAppointment: {
+                        text: 'Add New Appointment',
+                        click: function() {
+                            window.location.href = '{% url "appointment_create" %}';
+                        }
+                    },
+                    viewAllAppointments: {
+                        text: 'View All Appointments',
+                        click: function() {
+                            window.location.href = '{% url "appointment_list" %}';
+                        }
+                    }
+                },
+                dateClick: function(info) {
+                    var dateStr = info.dateStr;
+
+                    // Update the options to format only the date, not the time
+                    var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    var formattedDate = new Date(dateStr).toLocaleString('en-US', options);
+
+                    // Update the modal's content with the selected date
+                    selectedDateDisplay.textContent = formattedDate;
+
+                    // Set the link for the "Create Appointment" button
+                    createAppointmentLink.href = "{% url 'appointment_create' %}?date=" + dateStr;
+
+                    // Show the modal
+                    createAppointmentModal.show();
+                },
+// In your HTML file, inside the <script> block
+
+eventContent: function(arg) {
+    // Create a container for the event title and badge
+    let eventContentEl = document.createElement('div');
+    
+    // Create an element for the title
+    let titleEl = document.createElement('div');
+    titleEl.className = 'event-title';
+    titleEl.innerText = arg.event.title;
+
+    // Create an element for the badge
+    let badgeEl = document.createElement('span');
+    badgeEl.className = 'event-badge';
+    
+    // Get the status from the extendedProps.
+    let status = arg.event.extendedProps.status;
+    let statusDisplay = arg.event.extendedProps.status_display;
+
+    // Set the badge text to the human-readable display value
+    badgeEl.innerText = statusDisplay;
+
+    // Assign classes based on the raw status for styling
+    switch (status) {
+        case 'scheduled':
+            badgeEl.classList.add('status-scheduled');
+            break;
+        case 'completed':
+            badgeEl.classList.add('status-completed');
+            break;
+        case 'cancelled':
+            badgeEl.classList.add('status-cancelled');
+            break;
+        case 'rescheduled':
+            badgeEl.classList.add('status-rescheduled');
+            break;
+        case 'no_show':
+            badgeEl.classList.add('status-no_show');
+            break;
+        default:
+            badgeEl.classList.add('status-default');
+    }
+    
+    // Append the title and badge to the container
+    eventContentEl.appendChild(titleEl);
+    eventContentEl.appendChild(badgeEl);
+    
+    return { domNodes: [eventContentEl] };
+}
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %}

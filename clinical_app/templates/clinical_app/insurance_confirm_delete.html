@@ -1,0 +1,11 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block content %}
+<h2>Delete Insurance</h2>
+<p>Are you sure you want to delete <strong>{{ insurance }}</strong>?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, Delete</button>
+    <a href="{% url 'insurance_list' %}">Cancel</a>
+</form>
+{% endblock %}

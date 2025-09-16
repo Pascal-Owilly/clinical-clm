@@ -1,0 +1,25 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block title %}Confirm Payment{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-3 bg-success-light">
+        <div class="card-body p-4 text-center">
+            <i class="fas fa-check-circle fa-5x text-success mb-4 animate__animated animate__pulse"></i>
+            <h2 class="text-success fw-bold mb-3">Confirm Payment</h2>
+            <p class="lead text-dark">Are you sure you want to mark Bill #{{ bill.id }} as **Paid**?</p>
+            <p class="text-muted">This action will update the bill's status and balance.</p>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg me-3">
+                    <i class="fas fa-check me-2"></i> Mark as Paid
+                </button>
+                <a href="{% url 'billing_detail' bill.pk %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,535 @@
+{% extends 'clinical_app/base.html' %} {# Assuming you have a base.html #}
+{% load static %} {# If you use static files like CSS #}
+{% load clinical_filters %} {# Add this line to load your custom filter! #}
+{% load custom_filters %} {# Add this line to load your custom filter! #}
+
+{% block title %}Activity Logs - System Unit{% endblock %} {# A more robotic title #}
+
+{% block extra_head %}
+{# Link to your custom CSS file for specific styles #}
+<link rel="stylesheet" href="{% static 'clinical_app/css/activity_log_styles.css' %}">
+{# Link Google Fonts for robotic typography #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<style>
+    
+    /* General Body and Container Styles */
+body {
+    background-color: ; /* Dark charcoal/near-black for a futuristic base */
+    color: #e0e6ed; /* Light gray for general text */
+    font-family: 'Roboto Mono', monospace; /* Robotic font */
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px; /* Wider container for a squeezed look */
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Headings and Titles */
+.section-title {
+    color: #6a0dad; /* Golden color for main titles */
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: 700;
+    font-family: 'Share Tech Mono', monospace; /* More techy font for titles */
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3); /* Subtle golden glow */
+    border-bottom: 2px solid #6a0dad; /* Purple accent line */
+    padding-bottom: 10px;
+}
+
+.section-title .fas {
+    color: #4a90e2; /* Blue accent for icons */
+}
+
+/* Card Styles (Filter and Table containers) */
+.card {
+    background-color: #1a1f28; /* Darker background for cards */
+    border: 1px solid #4a0d6a; /* Purple border for cards */
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(74, 144, 226, 0.1); /* Deeper shadow with blue tint */
+    backdrop-filter: blur(5px); /* Frosted glass effect */
+}
+
+.card-header {
+    background: linear-gradient(90deg, #6a0dad 0%, #4a90e2 100%); /* Purple to Blue gradient */
+    border-bottom: 1px solid #ffd700; /* Golden line at the bottom of header */
+    color: #ffffff !important;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+/* Form Elements (Filter Protocol) */
+.form-label {
+    color: #4a90e2; /* Blue for labels */
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control,
+.form-select {
+    background-color: #2b303b; /* Darker input fields */
+    border: 1px solid #6a0dad; /* Purple border */
+    color: #e0e6ed;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.form-control::placeholder {
+    color: #8c96a3; /* Lighter placeholder text */
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #3a404a;
+    border-color: #ffd700; /* Golden focus border */
+    box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.25); /* Golden glow on focus */
+    color: #ffffff;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(45deg, #6a0dad 0%, #8b008b 100%); /* Purple gradient button */
+    border: none;
+    border-radius: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #8b008b 0%, #6a0dad 100%);
+    box-shadow: 0 0 15px rgba(106, 13, 173, 0.7); /* Purple glow on hover */
+}
+
+.btn-outline-info {
+    color: #4a90e2;
+    border-color: #4a90e2;
+    border-radius: 8px;
+    font-family: 'Roboto Mono', monospace;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-info:hover {
+    color: #0d1117;
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+    box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+}
+
+/* Table Styles */
+.activity-table {
+    width: 100%;
+    border-collapse: collapse; /* Ensure borders are neat */
+    margin-top: 20px;
+    background-color: #1a1f28; /* Same as card body for continuity */
+    border-radius: 12px;
+    overflow: hidden; /* Important for rounded corners on table */
+}
+
+.activity-table thead {
+    background: linear-gradient(90deg, #ffd700 0%, #ffbf00 100%); /* Golden gradient for table header */
+    color: #1a1f28; /* Dark text on golden header */
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.activity-table th {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    border-bottom: 2px solid #6a0dad; /* Purple separator */
+}
+
+.activity-table tbody tr {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.activity-table tbody tr:nth-child(even) {
+    background-color: #202630; /* Slightly different shade for even rows */
+}
+
+.activity-table tbody tr:hover {
+    background-color: #2b303b; /* Darker on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.activity-table td {
+    padding: 0.8rem;
+    border-bottom: 1px dashed #3a404a; /* Dashed subtle separator */
+    color: #c0c6ce; /* Lighter text for data */
+    vertical-align: middle;
+}
+
+/* Responsive Table (Mobile View) */
+@media (max-width: 991.98px) {
+    .activity-table thead {
+        display: none; /* Hide table headers on small screens */
+    }
+
+    .activity-table,
+    .activity-table tbody,
+    .activity-table tr,
+    .activity-table td {
+        display: block; /* Make table elements act like block elements */
+        width: 100%;
+    }
+
+    .activity-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #4a0d6a;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .activity-table td {
+        text-align: right;
+        padding-left: 50%; /* Space for the pseudo-element label */
+        position: relative;
+        border-bottom: 1px dashed #3a404a; /* Dashed subtle separator */
+    }
+
+    .activity-table td:last-child {
+        border-bottom: 0; /* No border on the last cell */
+    }
+
+    .activity-table td::before {
+        content: attr(data-label); /* Use data-label for the pseudo-element */
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 0.8rem;
+        font-weight: bold;
+        text-align: left;
+        color: #ffd700; /* Golden labels for mobile */
+        font-family: 'Share Tech Mono', monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+/* Badges (Action Type, Data Model) */
+.custom-badge {
+    padding: 0.5em 0.8em;
+    border-radius: 0.5rem !important; /* Slightly rounded for robotic feel */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    background-color: blue;
+}
+
+/* Specific Action Type Badge Colors */
+.bg-action-create {
+    background-color: #28a745 !important; /* Green for create */
+}
+
+.bg-action-read {
+    background-color: #17a2b8 !important; /* Cyan for read */
+}
+
+.bg-action-update {
+    background-color: #ffc107 !important; /* Yellow for update */
+    color: #333 !important; /* Dark text for contrast */
+}
+
+.bg-action-delete {
+    background-color: #dc3545 !important; /* Red for delete */
+}
+
+.bg-action-login {
+    background-color: #6f42c1 !important; /* Purple for login */
+}
+
+.bg-action-logout {
+    background-color: #fd7e14 !important; /* Orange for logout */
+}
+
+.bg-action-error {
+    background-color: #6c757d !important; /* Gray for errors */
+}
+
+.model-badge {
+    background-color: #4a90e2 !important; /* Blue for model names */
+    color: #fff !important;
+    padding: 0.4em 0.7em;
+    border-radius: 0.3rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.3px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* JSON Viewer */
+.json-collapse {
+    border: 1px solid #ffd700; /* Golden border for JSON data */
+    border-radius: 8px;
+    overflow: hidden; /* For rounded corners */
+}
+
+.json-code {
+    background-color: #0e0e1a !important; /* Even darker, almost black for code */
+    color: #00ff00 !important; /* Classic green on black for code */
+    padding: 1em !important;
+    border-radius: 8px;
+    white-space: pre-wrap; /* Preserve formatting and wrap text */
+    word-break: break-all; /* Break long words */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    max-height: 200px; /* Limit height */
+    overflow-y: auto; /* Scroll if content overflows */
+    box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2); /* Inner green glow */
+}
+
+
+/* Pagination */
+.custom-pagination .page-item .page-link {
+    background-color: #2b303b; /* Dark pagination buttons */
+    border: 1px solid #6a0dad; /* Purple border */
+    color: #4a90e2; /* Blue text */
+    border-radius: 8px;
+    margin: 0 4px;
+    transition: all 0.3s ease;
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.custom-pagination .page-item .page-link:hover {
+    background-color: #6a0dad; /* Purple on hover */
+    color: #ffd700; /* Golden text on hover */
+    border-color: #ffd700;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #ffd700; /* Golden active page */
+    border-color: #ffd700;
+    color: #1a1f28; /* Dark text on active */
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); /* Golden glow */
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    background-color: #1a1f28;
+    border-color: #3a404a;
+    color: #5a606a;
+}
+
+/* Utility / Accent Classes */
+.text-muted {
+    color: #8c96a3 !important; /* A slightly softer muted text */
+}
+
+.user-cell .fas {
+    color: #4a90e2; /* Blue icon for user unit */
+}
+</style>
+<div class="container my-5">
+    <h2 class="section-title text-center mb-5 pb-2">
+        <i class="fas fa-microchip me-2"></i> // SYSTEM LOG ARCHIVE //
+    </h2>
+
+    <div class="card shadow-sm mb-4 filter-card">
+        <div class="card-header bg-gradient-primary text-white d-flex align-items-center justify-content-between">
+            <h5 class="mb-0"><i class="fas fa-terminal me-2"></i> FILTER PROTOCOL</h5> {# Robotic language #}
+            <button class="btn btn-sm btn-light d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="card-body collapse show" id="filterCollapse">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4 col-sm-12">
+                    <label for="id_q" class="form-label form-label-sm">SEARCH PARAMETERS (Description, User, IP)</label> {# Robotic language #}
+                    <input type="text" class="form-control form-control-sm" id="id_q" name="q" value="{{ request.GET.q }}" placeholder="Scan activities..."> {# Robotic placeholder #}
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="id_action_type" class="form-label form-label-sm">ACTION TYPE</label> {# Robotic language #}
+                    <select class="form-select form-select-sm" id="id_action_type" name="action_type">
+                        <option value="">ALL CLASSIFICATIONS</option> {# Robotic language #}
+                        {% for type in action_types %}
+                            <option value="{{ type }}" {% if request.GET.action_type == type %}selected{% endif %}>{{ type|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="id_model_name" class="form-label form-label-sm">DATA MODEL</label> {# Robotic language #}
+                    <select class="form-select form-select-sm" id="id_model_name" name="model_name">
+                        <option value="">ALL MODELS</option> {# Robotic language #}
+                        {% for model in model_names %}
+                            <option value="{{ model }}" {% if request.GET.model_name == model %}selected{% endif %}>{{ model|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-12">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-search me-1"></i> INITIATE FILTER
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if activity_logs %}
+        <div class="card shadow-sm table-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm activity-table">
+                        <thead class="table-header-gradient text-white">
+                            <tr>
+                                <th>TIMESTAMP</th> {# Uppercase for robotic feel #}
+                                <th>USER UNIT</th> {# Robotic #}
+                                <th>ACTION TYPE</th>
+                                <th>DESCRIPTION LOG</th> {# Robotic #}
+                                <th>DATA MODEL</th> {# Robotic #}
+                                <th>OBJECT ID</th>
+                                <th>IP ADDRESS</th>
+                                <th>MODIFICATIONS</th> {# Robotic #}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in activity_logs %}
+                                <tr>
+                                    <td data-label="TIMESTAMP:">
+                                        <small>{{ log.timestamp|date:"Y-m-d" }}</small><br>
+                                        <small class="text-muted">{{ log.timestamp|date:"H:i:s" }}</small>
+                                    </td>
+                                    <td data-label="USER UNIT:"> {# Update data-label #}
+                                        <div class="user-cell">
+                                            <i class="fas fa-robot me-1"></i> {# Robot icon! #}
+                                            {% if log.user %}
+                                                {{ log.user.get_full_name|default:log.user.username }}
+                                            {% else %}
+                                                SYSTEM / UNAUTHORIZED
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td data-label="ACTION TYPE:">
+                                        <span class="badge rounded-pill bg-action-{{ log.action_type|lower|slugify }} text-white custom-badge">
+                                            {{ log.action_type|upper }} {# Uppercase for action type #}
+                                        </span>
+                                    </td>
+                                    <td data-label="DESCRIPTION LOG:">{{ log.description }}</td>
+                                    <td data-label="DATA MODEL:">
+                                        <span class="badge bg-light text-dark model-badge">
+                                            {{ log.model_name|default:"N/A" }}
+                                        </span>
+                                    </td>
+                                    <td data-label="OBJECT ID:"><small>{{ log.object_id|default:"N/A" }}</small></td>
+                                    <td data-label="IP ADDRESS:"><small>{{ log.ip_address|default:"N/A" }}</small></td>
+                                    <td data-label="MODIFICATIONS:">
+                                        {% if log.changes %}
+                                            <button class="btn btn-sm btn-outline-info toggle-changes-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChanges{{ log.pk }}" aria-expanded="false" aria-controls="collapseChanges{{ log.pk }}">
+                                                <i class="fas fa-microchip me-1"></i> ACCESS LOG
+                                            </button>
+                                            <div class="collapse mt-2 json-collapse" id="collapseChanges{{ log.pk }}">
+                                                <pre class="bg-dark text-white p-2 rounded small json-code">{{ log.changes|json_pretty }}</pre>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">[ NO DATA ]</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# Pagination Controls #}
+                {% if is_paginated %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center custom-pagination">
+                            {% comment %} Previous Page Button {% endcomment %}
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.model_name %}&model_name={{ request.GET.model_name }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span> PREV LOGS
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo; PREV LOGS</span></li>
+                            {% endif %}
+
+                            {% comment %} Page Numbers with Dots {% endcomment %}
+                            {% with current_page=page_obj.number total_pages=paginator.num_pages %}
+                                {% comment %} Define a range around the current page {% endcomment %}
+                                {% for i in 1|lrange:total_pages %}
+                                    {% comment %} Show first 3 pages {% endcomment %}
+                                    {% if i <= 3 %}
+                                        <li class="page-item {% if current_page == i %}active{% endif %}">
+                                            <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.model_name %}&model_name={{ request.GET.model_name }}{% endif %}">{{ i }}</a>
+                                        </li>
+                                    {% comment %} Show dots if there are pages between current and first/last set {% endcomment %}
+                                    {% elif i == current_page|add:"-3" and current_page > 4 %} {# Current page - 3, but only if current page is far enough #}
+                                        <li class="page-item disabled"><span class="page-link dots">...</span></li>
+                                    {% elif i >= current_page|add:"-2" and i <= current_page|add:"2" %} {# Show 2 pages before and 2 pages after current #}
+                                        <li class="page-item {% if current_page == i %}active{% endif %}">
+                                            <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.model_name %}&model_name={{ request.GET.model_name }}{% endif %}">{{ i }}</a>
+                                        </li>
+                                    {% elif i == current_page|add:"3" and current_page < total_pages|add:"-3" %} {# Current page + 3, but only if current page is far enough from end #}
+                                        <li class="page-item disabled"><span class="page-link dots">...</span></li>
+                                    {% comment %} Show last 3 pages {% endcomment %}
+                                    {% elif i >= total_pages|add:"-2" %}
+                                        <li class="page-item {% if current_page == i %}active{% endif %}">
+                                            <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.model_name %}&model_name={{ request.GET.model_name }}{% endif %}">{{ i }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+
+                            {% comment %} Next Page Button {% endcomment %}
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}{% if request.GET.model_name %}&model_name={{ request.GET.model_name }}{% endif %}" aria-label="Next">
+                                        NEXT LOGS <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">NEXT LOGS &raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> DATA UNAVAILABLE: NO LOG ENTRIES MATCHING CRITERIA.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-changes-btn');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                // Toggle between 'fa-microchip' and 'fa-cogs' for a more robotic feel
+                if (icon.classList.contains('fa-microchip')) {
+                    icon.classList.remove('fa-microchip');
+                    icon.classList.add('fa-cogs'); // Icon for showing / hiding changes
+                } else {
+                    icon.classList.remove('fa-cogs');
+                    icon.classList.add('fa-microchip');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

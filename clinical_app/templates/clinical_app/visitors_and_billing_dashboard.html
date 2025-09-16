@@ -1,0 +1,293 @@
+{% extends 'clinical_app/base.html' %}
+{% load custom_filters %} {# Load your custom filter here #}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Custom Styles for a Modern Look */
+        body {
+            background-color: #f8f9fa; /* Light background for the whole page */
+        }
+
+        .card {
+            border-radius: 1rem; /* Rounded corners for cards */
+            border: none; /* Remove default card border */
+            overflow: hidden; /* Ensures content respects border-radius */
+            transition: all 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .card:hover {
+            transform: translateY(-5px); /* Lift card slightly on hover */
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important; /* More pronounced shadow on hover */
+        }
+
+        .card-title {
+            font-weight: 600; /* Bolder titles */
+            margin-bottom: 1.25rem; 
+            display: flex; /* For icon alignment */
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 0.75rem; /* Space between icon and text */
+            font-size: 1.25rem; /* Larger icons */
+        }
+
+        .btn {
+            border-radius: 0.5rem; /* Rounded buttons */
+            font-weight: 500;
+            padding: 0.75rem 1.25rem; /* More padding for buttons */
+            transition: all 0.2s ease;
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-outline-success {
+            color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-outline-success:hover {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .btn-outline-info {
+            color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        .btn-outline-info:hover {
+            background-color: #17a2b8;
+            color: #fff;
+        }
+
+        .btn-outline-primary {
+            color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-outline-primary:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .btn-outline-secondary {
+            color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        .display-4 {
+            font-weight: 700; /* Bold numbers for summary */
+            font-size: 3.5rem; /* Larger numbers */
+        }
+
+        .bg-gradient-light {
+            background: linear-gradient 135deg, #f8f9fa, #e9ecef; /* Subtle gradient for card headers */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .list-group-item {
+            border-left: 4px solid transparent; /* Accent border for list items */
+            transition: border-left 0.2s ease;
+            padding: 1rem 1.25rem; /* More padding */
+        }
+
+        .list-group-item:hover {
+            background-color: #f1f3f5; /* Light background on hover */
+        }
+
+        .list-group-item .fw-bold {
+            font-size: 1.05rem; /* Slightly larger text for activity messages */
+        }
+
+        .list-group-item.text-primary { border-left-color: #007bff; }
+        .list-group-item.text-secondary { border-left-color: #6c757d; }
+        .list-group-item.text-success { border-left-color: #28a745; }
+
+        .chart-bar {
+            background-color: var(--bs-primary); /* Use Bootstrap primary color */
+            border-radius: 0.25rem; /* Slightly rounded bars */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for bars */
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            transform: scaleY(1.05); /* Slight grow effect on hover */
+            filter: brightness(1.1); /* Slightly brighter on hover */
+        }
+
+        .tooltip.bs-tooltip-top .tooltip-inner {
+            background-color: #343a40; /* Darker tooltip background */
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .tooltip.bs-tooltip-top .tooltip-arrow::before {
+            border-top-color: #343a40;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .display-4 {
+                font-size: 2.5rem;
+            }
+            .d-flex.flex-wrap.gap-2 {
+                justify-content: center; /* Center buttons on small screens */
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1 class="mb-3 text-center text-primary fw-bold">{{ title }}</h1>
+
+    <div class="row mb-5">
+        {# Quick Links Card #}
+        <div class="col-12">
+            <div class="card shadow-lg h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-lightning-charge-fill"></i> Quick Actions</h5>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="{% url 'visitor_entry_exit_create' %}" class="btn btn-success d-flex align-items-center">
+                            <i class="bi bi-person-plus-fill"></i> Record Visitor Entry/Exit
+                        </a>
+                        <a href="{% url 'visitor_entry_exit_list' %}" class="btn btn-info d-flex align-items-center">
+                            <i class="bi bi-people-fill"></i> View All Visitors
+                        </a>
+                        <a href="{% url 'billing_create' %}" class="btn btn-primary d-flex align-items-center">
+                            <i class="bi bi-currency-dollar"></i> Create New Bill
+                        </a>
+                        <a href="{% url 'billing_list' %}" class="btn btn-secondary d-flex align-items-center">
+                            <i class="bi bi-receipt"></i> View All Bills
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        {# Visitor Summary Card #}
+        <div class="col-md-6 mb-2">
+            <div class="card bg-gradient-light border-primary shadow h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-people-fill"></i> Visitor Summary (Today)</h5>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h2 class="display-4 text-primary">{{ total_visitors_today }}</h2>
+                            <p class="text-muted fw-bold">Total Entries Today</p>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="display-4 text-info">{{ current_visitors_inside }}</h2>
+                            <p class="text-muted fw-bold">Current Visitors Inside</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Billing Summary Card #}
+        <div class="col-md-6 mb-2">
+            <div class="card bg-gradient-light border-success shadow h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="bi bi-cash-stack"></i> Billing Summary</h5>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h2 class="display-4 text-success">Ksh {{ total_billings_sum|floatformat:0 }}</h2> {# Assuming total_billings_sum is a number #}
+                            <p class="text-muted fw-bold">Total Billed Amount</p>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="display-4 text-warning">Ksh {{ average_bill|floatformat:0 }}</h2> {# Assuming average_bill is a number #}
+                            <p class="text-muted fw-bold">Average Bill Amount</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        {# Daily Visitor Trends Graph #}
+        <div class="col-md-7 mb-2">
+            <div class="card shadow h-100">
+                <div class="card-header bg-gradient-light text-dark">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Daily Visitor Entries (Last 7 Days)</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    {% if visitor_trends %}
+                        <div class="d-flex align-items-end flex-grow-1" style="min-height: 200px; gap: 15px;">
+                            {% for trend in visitor_trends %}
+                                <div class="text-center flex-fill d-flex flex-column justify-content-end align-items-center" style="height: 100%;">
+                                    <div class="chart-bar bg-primary text-white d-flex align-items-center justify-content-center"
+                                         style="height: {{ trend.height }}%; width: 60%;"
+                                         data-bs-toggle="tooltip" data-bs-placement="top" title="{{ trend.count }} entries">
+                                        <span class="small fw-bold">{{ trend.count }}</span>
+                                    </div>
+                                    <small class="mt-2 text-muted">{{ trend.day }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-center text-muted mt-4 small">Bar height indicates number of entries</p>
+                    {% else %}
+                        <div class="alert alert-info text-center my-auto" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i> No visitor trend data available for the last 7 days.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Recent Activity Log #}
+        <div class="col-md-5 mb-2">
+            <div class="card shadow h-100">
+                <div class="card-header bg-gradient-light text-dark">
+                    <h5 class="mb-0"><i class="bi bi-activity"></i> Recent Activity Log</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_activity %}
+                        <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                            {% for activity in recent_activity %}
+                                <div class="list-group-item d-flex justify-content-between align-items-start
+                                    {% if 'visitor-entry' in activity.type %}text-primary{% endif %}
+                                    {% if 'visitor-exit' in activity.type %}text-secondary{% endif %}
+                                    {% if 'billing' in activity.type %}text-success{% endif %}
+                                ">
+                                    <div class="me-auto">
+                                        <div class="fw-bold mb-1">
+                                            {% if 'visitor' in activity.type %}
+                                                <i class="bi {% if 'entry' in activity.type %}bi-box-arrow-in-right{% else %}bi-box-arrow-right{% endif %} me-2"></i>
+                                            {% elif 'billing' in activity.type %}
+                                                <i class="bi bi-file-earmark-text me-2"></i>
+                                            {% endif %}
+                                            {{ activity.message }}
+                                        </div>
+                                        <small class="text-muted d-block">{{ activity.timestamp|timesince }} ago</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center my-auto" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i> No recent activity to display.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {# Initialize Bootstrap Tooltips #}
+    <script>
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+{% endblock %}

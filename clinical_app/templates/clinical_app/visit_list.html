@@ -1,0 +1,82 @@
+{% extends 'clinical_app/base.html' %}
+{% load static %}
+
+{% block title %}Patient Visits{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-info text-white py-4">
+                    <h2 class="mb-0 fw-bold text-center">Patient Visits</h2>
+                </div>
+                <div class="card-body p-4">
+
+                    {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if visits %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Patient</th>
+                                        <th scope="col">Reason</th>
+                                        <th scope="col">Doctor</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Visit Date</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for visit in visits %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ visit.patient.full_name }}</td>
+                                        <td>{{ visit.reason|default:"-" }}</td>
+                                        <td>{{ visit.doctor|default:"Not assigned" }}</td>
+                                        <td>
+                                            {% if visit.status == "pending" %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif visit.status == "ongoing" %}
+                                                <span class="badge bg-primary">Ongoing</span>
+                                            {% elif visit.status == "completed" %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Unknown</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ visit.visit_date|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'visit_detail' visit.id %}" class="btn btn-sm btn-outline-info">View</a>
+                                            <a href="{% url 'visit_edit' visit.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center mb-0">
+                            No visits recorded yet for this patient.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'patient_list' %}" class="btn btn-link">Back to Patient List</a>
+                    <a href="{% url 'visit_create' patient.id %}" class="btn btn-success">Create New Visit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

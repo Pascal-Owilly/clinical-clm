@@ -1,0 +1,39 @@
+{% extends 'clinical_app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ form.instance.pk|yesno:"Edit Bill,Create Bill" }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-info mb-0">
+            <i class="fas fa-edit me-3"></i> {{ form.instance.pk|yesno:"Edit Bill,Create Bill" }}
+        </h3>
+        <div>
+            <a href="{% url 'billing_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-info text-white py-3">
+            <h5 class="mb-0 fw-bold">Billing Form</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{% if form.instance.pk %}{% url 'billing_detail' form.instance.pk %}{% else %}{% url 'billing_list' %}{% endif %}" class="btn btn-light me-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Bill
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

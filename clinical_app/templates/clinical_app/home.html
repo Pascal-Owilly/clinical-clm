@@ -1,0 +1,1621 @@
+{% extends "clinical_app/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <style>
+        /* Custom CSS Variables for consistent theming */
+        :root {
+            --primary-color: #4A90E2; /* A vibrant blue */
+            --primary-color-rgb: 74, 144, 226; /* RGB for rgba use */
+            --secondary-color: #50E3C2; /* A complementary turquoise */
+            --accent-color: #F5A623; /* A warm orange for highlights */
+            --text-dark: #333;
+            --text-muted: #7f8c8d;
+            --bg-light: #f8f9fa;
+            /* --card-bg: #780206,#061161 !important; */
+            --border-color: #e0e0e0;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+            --shadow-medium: rgba(0, 0, 0, 0.12);
+            --gradient-start: #4facfe;
+            --gradient-end: #00f2fe;
+            --hover-gradient-start: #6a85b6; /* A deeper blue-grey */
+            --hover-gradient-end: #bac8e0; /* A lighter blue-grey */
+            --custom-card-height: 180px; /* Slightly taller uniform height for custom styled cards */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif; /* Main font */
+            background-color: var(--bg-light); /* Light grey background */
+            color: var(--text-dark); /* Dark text for readability */
+        }
+
+        /* --- Text and Font Enhancements --- */
+        h3.mb-4 {
+            font-family: 'Poppins', sans-serif; /* Maintain Poppins for main headings */
+            font-weight: 700; /* Bolder main heading */
+            color: var(--primary-color); /* Make dashboard title vibrant */
+            letter-spacing: -0.5px; /* Slight letter spacing for modern feel */
+            padding-bottom: 15px; /* Add some space below the title */
+        }
+
+        /* --- Custom Card Styles (for admin dashboard cards) --- */
+        .custom-styled-card {
+            background: linear-gradient(to #780206,#061161) !important; 
+            border: none;
+            border-radius: 1.25rem; /* Softer, more pronounced rounded corners */
+            box-shadow: 0 6px 20px var(--shadow-light); /* Subtle shadow */
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none; /* Remove underline from link */
+            color: inherit; /* Inherit text color */
+            position: relative; /* For the pseudo-element gradient */
+            overflow: hidden; /* Hide the overflow of the pseudo-element */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: var(--custom-card-height); /* Uniform height for these cards */
+            margin-bottom: 1.5rem; /* Add margin bottom for spacing between rows on smaller screens */
+              /*border-left: 1px solid blue; */
+            border-top: 4px solid lightblue;
+
+              /*border-image: linear-gradient(to right, #000046, #1CB5E0);*/
+        }
+
+        .gradient-border {
+          border-top: 5px solid transparent; 
+          border-image: linear-gradient(to right, #000046, #1CB5E0);
+          border-image-slice: 1;
+        }
+
+        /* Pseudo-element for the beautiful hover gradient overlay */
+        .custom-styled-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* background: linear-gradient(45deg, var(--hover-gradient-start), var(--hover-gradient-end)); */
+            background: linear-gradient(45deg, blue, pink);
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 1; /* Place behind the content */
+        }
+
+        .custom-styled-card:hover::before {
+            opacity: 1; /* Show gradient on hover */
+        }
+
+        .custom-styled-card:hover {
+            transform: translateY(-8px); /* More pronounced lift effect */
+            box-shadow: 0 12px 40px var(--shadow-medium); /* Enhanced shadow on hover */
+            color: white; /* Change text color for better contrast on hover */
+        }
+
+        .custom-styled-card .card-body {
+            padding: 1.5rem; 
+            text-align: left; /* Align text to left */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%; /* Ensure body takes full height */
+            position: relative;
+            z-index: 2; /* Ensure content is above the pseudo-element */
+        }
+
+        /* Container for the icon and text */
+        .custom-styled-card .card-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        /* The icon circle container, now positioned absolutely */
+        .custom-styled-card .icon-circle {
+            position: absolute;
+            bottom: 1.5rem; /* Initial position at bottom right */
+            right: 1rem; /* Initial position at bottom right */
+            width: 40px; /* Slightly smaller icon circle */
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-color); /* Initial color for the icon circle */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for the circle */
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 3; /* Ensure icon is on top */
+            overflow: hidden;
+        }
+
+        /* Icon styling */
+        .custom-styled-card .icon-circle i {
+            color: white !important; /* Icon white initially */
+            font-size: 1.3rem; /* Larger icon size */
+            transition: color 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            z-index: 4;
+        }
+
+        /* Text container */
+        .custom-styled-card .card-text-container {
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Make card titles clearer */
+        .custom-styled-card .card-body h5 {
+            font-family: 'Roboto', sans-serif; /* Roboto for titles */
+            font-weight: 600; /* Bolder title */
+            color: var(--text-dark); /* Darker initial color for clarity */
+            margin-bottom: 0.25rem;
+            font-size: 1.2rem; /* Slightly larger title font */
+            transition: color 0.4s ease;
+            line-height: 1.2;
+            font-weight: 500;
+        }
+
+        /* Make admin card values even larger and more impactful */
+        .custom-styled-card .card-body h3.card-text-value { /* Specific class for value */
+            font-family: 'Poppins', sans-serif; /* Poppins for main text */
+            font-weight: 900; /* Ultra bold for data prominence */
+            color: var(--primary-color); /* Initial vibrant color */
+            font-size: 2rem; /* Significantly larger font size */
+            margin-bottom: 0.5rem; /* Add a bit more space below the value */
+            line-height: 1.2;
+            transition: color 0.4s ease, transform 0.4s ease; /* Add transform for value animation */
+        }
+
+        /* Hover effect: Move text up, move icon to top left, change icon circle background */
+        .custom-styled-card:hover .card-text-container {
+            transform: translateY(-20px); /* Move the text up slightly on hover */
+        }
+
+        .display-greeting{
+            font-size: 1.5rem;
+        }
+
+        .custom-styled-card:hover .card-body h5 {
+            color: rgba(255, 255, 255, 0.9); /* Lighter on hover, but still legible */
+        }
+
+        /* On hover, ensure the values are truly white for contrast */
+        .custom-styled-card:hover .card-body h3.card-text-value {
+            color: white; /* White text on hover for contrast */
+            transform: translateY(-5px); /* Slight lift for the number itself */
+        }
+
+        .custom-styled-card:hover .icon-circle {
+            bottom: unset; /* Reset bottom position */
+            right: 1.5rem; /* Reset right position */
+            top: 1.5rem; /* Move to top, adjust for padding */
+            left: unset; /* Move to left, adjust for padding */
+            transform: scale(1.05); /* Slight scale */
+            background: var(--card-bg); /* Change icon circle background to white */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-styled-card:hover .icon-circle i {
+            color: var(--primary-color) !important; /* Change icon color to primary on hover */
+            transform: scale(1); /* Reset icon scale/rotation */
+        }
+
+        /* --- General Bootstrap Overrides/Adjustments --- */
+        /* For other cards that use Bootstrap's .card class */
+        .card {
+            border-radius: 0.75rem; /* Slightly more rounded than default Bootstrap */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Subtle shadow for all cards */
+        }
+
+        .card-header {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            border-bottom: none; /* Remove default header border */
+            border-top-left-radius: 0.75rem !important;
+            border-top-right-radius: 0.75rem !important;
+            padding: 1rem 1.25rem; /* Slightly more padding */
+        }
+        /* Custom background colors for Bootstrap card headers */
+        .card-header.bg-info {
+            background-color: var(--primary-color) !important; /* Use primary color for info */
+            color: white !important;
+        }
+        .card-header.bg-success {
+            background-color: var(--secondary-color) !important; /* Use secondary color for success */
+            color: white !important;
+        }
+
+        /* List group item styling for doctor/patient views */
+        .list-group-item {
+            font-family: 'Roboto', sans-serif;
+            border-color: var(--border-color); /* Use custom border color */
+            padding: 1rem 1.25rem; /* Slightly more padding for list items */
+            margin-bottom: 0.5rem; /* Add space between list items */
+            border-radius: 0.5rem; /* Slightly rounded corners for list items */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            display: flex; /* Use flexbox for better alignment of content */
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .list-group-item:hover {
+            background-color: rgba(var(--primary-color-rgb), 0.05); /* Very light hover background */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow on hover */
+        }
+        .list-group-item strong {
+            font-weight: 700; /* Make labels bolder */
+            color: var(--text-dark);
+            margin-right: 5px; /* Space between label and value */
+        }
+
+        .chart-container {
+            position: relative;
+            height: 40vh; /* Adjust as needed */
+            width: 100%;
+        }
+
+        .list-group-item a {
+            color: var(--primary-color); /* Apply primary color to links in list items */
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .list-group-item a:hover {
+            color: #367ac8; /* A darker shade on hover */
+            text-decoration: underline;
+        }
+
+        /* Highlight specific data within list items */
+        .list-group-item span.date-time {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--primary-color); /* Use primary color for dates */
+        }
+
+        .btn {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            border-radius: 0.5rem; /* More rounded buttons */
+            padding: 0.5rem 1.2rem; /* Consistent button padding */
+        }
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            background-image: linear-gradient(to right, var(--primary-color), #367ac8); /* Subtle gradient for primary buttons */
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #367ac8 !important;
+            border-color: #367ac8 !important;
+            background-image: linear-gradient(to right, #367ac8, var(--primary-color)); /* Reverse gradient on hover */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        .btn-link {
+            color: var(--primary-color) !important;
+            font-weight: 500;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+        .btn-sm {
+            padding: 0.35rem 0.8rem; /* Adjust small button padding */
+            font-size: 0.875rem;
+        }
+
+        /* Specific styling for the 'p' tag within admin cards */
+        .custom-styled-card .card-body p.card-text {
+            color: var(--text-muted); /* Muted text color */
+            font-size: 0.8rem; /* Slightly larger description text */
+            margin-bottom: 0.5rem;
+            transition: color 0.4s ease;
+        }
+        .custom-styled-card:hover .card-body p.card-text {
+            color: rgba(255, 255, 255, 0.8); /* Lighter on hover */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            h1.mb-4 {
+                font-size: 1.8rem; /* Adjust title size for smaller screens */
+                text-align: center;
+            }
+            .custom-styled-card {
+                min-height: 160px; /* Adjust height for smaller screens if needed */
+            }
+            .custom-styled-card .card-body h3.card-text-value {
+                font-size: 2.5rem; /* Slightly smaller value on mobile */
+            }
+            .custom-styled-card .icon-circle {
+                width: 50px;
+                height: 50px;
+                bottom: 1rem;
+                right: 1rem;
+            }
+            .custom-styled-card .icon-circle i {
+                font-size: 1.8rem;
+            }
+            .custom-styled-card:hover .icon-circle {
+                top: 1rem;
+                left: 1rem;
+            }
+        }
+
+         /* ------------------------------------------- */
+    /* 1. General Page & Container Styling        */
+    /* ------------------------------------------- */
+    .doctor-dashboard-container-fluid {
+        background-color: #f0f2f5; /* Light gray background for a clean look */
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        padding: 2rem;
+    }
+
+    .doctor-dashboard-card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden; /* Ensures child elements don't spill over rounded corners */
+    }
+
+    .doctor-dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ------------------------------------------- */
+    /* 2. Header & Button Styling                 */
+    /* ------------------------------------------- */
+    .doctor-dashboard-card-header {
+        background: linear-gradient(135deg, #007bff, #0056b3); /* Primary gradient */
+        color: white;
+        font-weight: 600;
+        font-size: 1.25rem;
+        padding: 1.5rem;
+        border-radius: 1rem 1rem 0 0;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .doctor-dashboard-card-header.bg-success {
+        background: linear-gradient(135deg, #28a745, #1d6d36); /* Success gradient */
+    }
+
+    .doctor-dashboard-btn-lg {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px; /* Pill shape for a modern look */
+        transition: all 0.3s ease;
+    }
+
+    .doctor-dashboard-btn-primary {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        color: white;
+    }
+
+    .doctor-dashboard-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .doctor-dashboard-btn-outline-secondary {
+        border-color: #ced4da;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .doctor-dashboard-btn-outline-secondary:hover {
+        background-color: #e9ecef;
+        transform: translateY(-2px);
+    }
+
+    /* ------------------------------------------- */
+    /* 3. List & Alert Styling                    */
+    /* ------------------------------------------- */
+    .doctor-dashboard-list-group-item {
+        background-color: transparent;
+        border-color: #e9ecef;
+        padding: 1rem 1.5rem;
+    }
+    
+    .doctor-dashboard-list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    .doctor-dashboard-alert {
+        border-radius: 0.75rem;
+        font-weight: 500;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* ------------------------------------------- */
+    /* 4. Custom Stats Card Styling Doctor            */
+    /* ------------------------------------------- */
+    .doctor-dashboard-custom-styled-card {
+        text-align: center;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .doctor-dashboard-custom-styled-card .card-body {
+        padding: 2rem;
+    }
+    
+    .doctor-dashboard-custom-styled-card .fa-3x {
+        font-size: 3rem;
+        opacity: 0.6;
+    }
+    
+    .doctor-dashboard-custom-styled-card .card-text-value {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+    
+    /* Adding subtle hover effects */
+    .doctor-dashboard-custom-styled-card:hover {
+        transform: translateY(-5px) scale(1.02);
+    }
+    </style>
+<div class="container-fluid py-4"> {# Added py-4 for vertical padding #}
+<div class="text-center text-md-start " style="margin-bottom: 30px;">
+    <h3 class="display-greeting fw-bol text-primary mb-1">
+        <span id="greeting-icon"></span>
+        <span id="greeting"></span>, {{ user.get_full_name|default:user.username|capfirst }}!
+        <span class="lead text-muted mb-0" 
+            style="opacity:0.8;font-size: 14px;" 
+        >
+            You are logged in as
+            {% if user.user_type == 'admin' %}
+                <span class=" "><i class="fas fa-shield-alt me-1"></i> An Administrator</span>
+            {% elif user.user_type == 'doctor' %}
+                <span class=""><i class="fas fa-user-md me-1"></i> A Doctor</span>
+            {% elif user.user_type == 'nurse' %}
+                <span class=""><i class="fas fa-user-nurse me-1"></i> A Nurse</span>
+            {% elif user.user_type == 'pharmacist' %}
+                <span class=""><i class="fas fa-pills me-1"></i> A Pharmacist</span>
+            {% elif user.user_type == 'lab_tech' %}
+                <span class=""><i class="fas fa-flask me-1"></i> A Lab Technician</span>
+            {% elif user.user_type == 'radiologist' %}
+                <span class=""><i class="fas fa-x-ray me-1"></i> A Radiologist</span>
+            {% elif user.user_type == 'patient' %}
+                <span class=""><i class="fas fa-user-injured me-1"></i> A Patient</span>
+            {% elif user.user_type == 'receptionist' %}
+                <span class=""><i class="fas fa-headset me-1"></i> A Receptionist</span>
+            {% elif user.user_type == 'procurement_officer' %}
+                <span class=""><i class="fas fa-truck me-1"></i> A Procurement Officer</span>
+            {% else %}
+                <span class=""><i class="fas fa-user me-1"></i> A Standard User</span>
+            {% endif %}
+        </span>
+    </h3>
+</div>
+    {% if user.is_authenticated %}
+        {% if user_type == 'admin' %}
+            <div class="row">
+                <div class="col-md-3">
+                    <a href="{% url 'patient_list' %}" class="card custom-styled-card" aria-label="Total Patients Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Patients</h5>
+                                <h3 class="card-text-value">{{ total_patients }}</h3>
+                                <p class="card-text">Registered patients in the system.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-user-injured" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'doctor_list' %}" class="card custom-styled-card" aria-label="Total Doctors Card"> {# Removed 'disabled' class #}
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5> Doctors</h5>
+                                <h3 class="card-text-value">{{ total_doctors }}</h3>
+                                <p class="card-text">Medical professionals available.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-user-md" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'appointment_calendar' %}" class="card custom-styled-card {% if some_condition_is_true %}disabled{% endif %}" aria-label="Pending Appointments Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5> Appointments</h5>
+                                <h3 class="card-text-value">{{ pending_appointments }}</h3>
+
+                                <p class="card-text">Appointments scheduled but not completed.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {# New Admin Metrics based on your View #}
+                <div class="col-md-3">
+                    {# Updated href to point to the 'user_list' URL and removed 'disabled' class #}
+                    <a href="{% url 'user_list' %}" class="card custom-styled-card" aria-label="Total Active Staff Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>All Users</h5>
+                                <h3 class="card-text-value">{{ total_active_users }}</h3>
+                                <p class="card-text">All active users except patients.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+        <div class="col-md-3">
+            <a href="{% url 'patient_list' %}" class="card custom-styled-card" aria-label="New Patient Registrations Today Card">
+                {# Assuming you'll create a URL for new patient registrations, otherwise, link to a relevant page #}
+                <div class="card-body">
+                    <div class="card-text-container">
+                        <h5>Visits</h5>
+                        <h3 class="card-text-value">{{ new_patient_registrations_today }}</h3>
+                        <p class="card-text">New visits today.</p>
+                    </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+                <div class="col-md-3">
+                    <a href="{% url 'patient_list' %}" class="card custom-styled-card" aria-label="Total Patients Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Patients</h5>
+                                <h3 class="card-text-value">{{ total_patients }}</h3>
+                                <p class="card-text">Registered patients in the system.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-user-injured" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-3">
+                    <a href="{% url 'department_list' %}" class="card custom-styled-card" aria-label="Total Departments Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Departments</h5>
+                                <h3 class="card-text-value">{{ total_departments }}</h3>
+                                <p class="card-text">Number of hospital departments.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-building" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+               <div class="col-md-3">
+                <a href="{% url 'lab_test_results_list' %}?date_range=last_30_days" class="card custom-styled-card">
+                    <div class="card-body">
+                        <div class="card-text-container">
+                            <h5>Lab Tests (Last 30 Days)</h5>
+                            <h3 class="card-text-value">{{ total_lab_tests_performed_last_30_days }}</h3>
+                            <p class="card-text">Tests performed in the past month.</p>
+                        </div>
+                        <div class="icon-circle">
+                            <i class="fas fa-flask" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+                <div class="col-md-3">
+                    <a href="{% url 'imaging_results_list' %}?date_range=last_30_days" class="card custom-styled-card" aria-label="Imaging Scans Last 30 Days Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Imaging Scans (Last 30 Days)</h5>
+                                <h3 class="card-text-value">{{ total_imaging_scans_performed_last_30_days }}</h3>
+                                <p class="card-text">Scans performed in the past month.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-x-ray" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'medication_inventory_list' %}" class="card custom-styled-card" aria-label="Medications Low in Stock Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Medications Low in Stock</h5>
+                                <h3 class="card-text-value">{{ low_stock_meds_pharmacist }}</h3>
+                                <p class="card-text">Medications that need reordering.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-pills" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'cancer_reports_list' %}?reported=false&date_range=last_year" class="card custom-styled-card" aria-label="Unreported Cancer Reports Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Unreported Cancer Reports (Last Year)</h5>
+                                <h3 class="card-text-value">{{ cancer_reports_unreported }}</h3>
+                                <p class="card-text">Pending reports to national registry from last year.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-disease" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'cancer_reports_list' %}?reported=true&date_range=last_30_days" class="card custom-styled-card" aria-label="Cancer Reports Submitted (Last 30 Days) Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Cancer Reports Submitted (Last 30 Days)</h5>
+                                <h3 class="card-text-value">{{ cancer_reports_submitted_last_30_days }}</h3>
+                                <p class="card-text">Reports sent to registry in the past month.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-file-medical" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+               <div class="col-md-3">
+                    <a href="{% url 'birth_records_list' %}" class="card custom-styled-card" aria-label="New Births Today Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>New Births Today</h5>
+                                <h3 class="card-text-value">{{ new_births_today }}</h3>
+                                <p class="card-text">Babies born in the facility today.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-baby" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'mortality_records_list' %}" class="card custom-styled-card" aria-label="New Mortalities Today Card">
+                            <div class="card-body">
+                                <div class="card-text-container">
+                                    <h5>New Mortalities Today</h5>
+                                    <h3 class="card-text-value">{{ new_mortalities_today }}</h3>
+                                    <p class="card-text">Recorded deaths in the facility today.</p>
+                                </div>
+                                <div class="icon-circle">
+                                    <i class="fas fa-cross" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+            </div>
+
+        <div class="row mt-5 g-4">
+            <div class="col-lg-6 col-md-12">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-secondary text-white py-3">
+                        <h6 class="mb-0 fw-bol"><i class="fas fa-chart-line "></i> Patient Registrations (Last 12 Months)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="patientRegistrationsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white py-3">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie "></i> Patients by Gender</h6>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div class="chart-container">
+                            <canvas id="genderPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-tint me-2"></i> Patients by Blood Group</h6>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div class="chart-container">
+                            <canvas id="bloodGroupPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% if recent_activity_logs %}
+    <h5 class="mt-5 mb-3">Recent System Activity <small class="text-muted">(Last 5 logs)</small></h5>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Action</th>
+                    <th scope="col">Timestamp</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Model</th>
+                    <th scope="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_activity_logs %}
+                    <tr>
+                        <td class="align-middle">
+                            {# Action Type Badge #}
+                            {% if log.action_type == 'CREATE' %}
+                                <span class="badge bg-success">CREATE</span>
+                            {% elif log.action_type == 'UPDATE' %}
+                                <span class="badge bg-warning text-dark">UPDATE</span>
+                            {% elif log.action_type == 'DELETE' %}
+                                <span class="badge bg-danger">DELETE</span>
+                            {% elif log.action_type == 'LOGIN' %}
+                                <span class="badge bg-primary">LOGIN</span>
+                            {% elif log.action_type == 'LOGOUT' %}
+                                <span class="badge bg-secondary">LOGOUT</span>
+                            {% elif log.action_type == 'VIEW' %}
+                                <span class="badge bg-info text-dark">VIEW</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ log.action_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted align-middle">
+                            <small>{{ log.timestamp|date:"M d, Y H:i" }}</small>
+                        </td>
+                        <td class="align-middle">
+                            <i class="fas fa-user-circle me-1 text-primary"></i>
+                            {% if log.user %}
+                                <strong>{{ log.user.get_full_name|default:log.user.username }}</strong>
+                            {% else %}
+                                <strong>System / Anonymous</strong>
+                            {% endif %}
+                            {% if log.ip_address %}
+                                <small class="text-muted d-block">(IP: {{ log.ip_address }})</small>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted align-middle">
+                            {% if log.model_name %}
+                                <i class="fas fa-cube me-1 text-info"></i>{{ log.model_name }}
+                                {% if log.object_id %}<span class="text-muted d-block">(ID: {{ log.object_id }})</span>{% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small align-middle">
+                            {% if log.description %}
+                                <i class="fas fa-file-alt me-1 text-secondary"></i>{{ log.description|truncatechars:100 }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-left ">
+        <a href="{% url 'activity_log_list' %}" class="btn btn-sm btn-outline-info">
+            <i class="fas fa-eye me-2"></i> View All Logs
+        </a>
+    </div>
+
+{% else %}
+    <div class="alert alert-info mt-5" role="alert">
+        <i class="fas fa-info-circle me-2"></i> No recent activity logs found.
+    </div>
+{% endif %}
+
+
+{% elif user_type == 'doctor' %}
+<div class="row">
+    <div class="col-12 col-xl-8">
+        <div class="doctor-dashboard-card mb-4">
+            <div class="doctor-dashboard-card-header bg-primary text-white">Your Daily Schedule</div>
+            <div class="card-body text-center">
+                <div class="doctor-dashboard-alert alert-info text-center" role="alert">
+                    <i class="fas fa-calendar-day me-2"></i> Click the button below to view your full calendar.
+                </div>
+                <a href="{% url 'appointment_calendar' %}" class="doctor-dashboard-btn-primary doctor-dashboard-btn-lg mt-3" aria-label="View doctor calendar">
+                    My Calendar <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="doctor-dashboard-card mb-4">
+            <div class="doctor-dashboard-card-header bg-success text-white">Your Recent Patient Encounters</div>
+            <div class="card-body">
+                {% if recent_encounters %}
+                    <ul class="list-group list-group-flush">
+                        {% for encounter in recent_encounters %}
+                            <li class="doctor-dashboard-list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">
+                                        <i class="fas fa-user-injured me-2 text-info"></i> Patient:
+                                        <a href="{% url 'patient_detail' encounter.patient.pk %}" class="link-primary" aria-label="View patient details for {{ encounter.patient.full_name }}">{{ encounter.patient.full_name|default:encounter.patient.patient_id }}</a>
+                                    </div>
+                                    <small class="text-muted"><i class="fas fa-calendar-check me-1"></i> {{ encounter.encounter_date|date:"F d, Y" }} at {{ encounter.encounter_date|date:"P" }}</small>
+                                    <p class="text-truncate mb-0 mt-1" style="max-width: 400px;">
+                                        <i class="fas fa-tag me-1"></i> Type: {{ encounter.get_encounter_type_display }}
+                                    </p>
+                                </div>
+                                <a href="{% url 'encounter_detail' encounter.pk %}" class="doctor-dashboard-btn-outline-secondary btn-sm mt-2" aria-label="View details for encounter on {{ encounter.encounter_date|date:'F d, Y' }}">
+                                    View Details <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="doctor-dashboard-alert alert-warning text-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> No recent encounters recorded.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-xl-4">
+        <div class="d-grid gap-3">
+            <div class="doctor-dashboard-card text-center text-primary bg-primary-subtle border-primary doctor-dashboard-custom-styled-card">
+                <a href="{% url 'doctor_patient_list' %}" class="card-body stretched-link text-decoration-none">
+                    <i class="fas fa-users fa-3x mb-2"></i>
+                    <h5 class="card-title fw-bold">My Total Patients</h5>
+                    <h3 class="doctor-dashboard-card-text-value display-4 fw-bolder">{{ my_patients }}</h3>
+                    <p class="card-text text-muted">All patients you have treated.</p>
+                </a>
+            </div>
+            
+            <div class="doctor-dashboard-card text-center text-success bg-success-subtle border-success doctor-dashboard-custom-styled-card">
+                <a href="{% url 'doctor_patient_list' %}" class="card-body stretched-link text-decoration-none">
+                    <i class="fas fa-calendar-check fa-3x mb-2"></i>
+                    <h5 class="card-title fw-bold">Today's Visits</h5>
+                    <h3 class="doctor-dashboard-card-text-value display-4 fw-bolder">{{ my_appointments.count }}</h3>
+                    <p class="card-text text-muted">Total appointments scheduled.</p>
+                </a>
+            </div>
+            
+            <div class="doctor-dashboard-card text-center text-info bg-info-subtle border-info doctor-dashboard-custom-styled-card">
+                <a href="{% url 'doctor_patient_list' %}" class="card-body stretched-link text-decoration-none">
+                    <i class="fas fa-user-plus fa-3x mb-2"></i>
+                    <h5 class="card-title fw-bold">New Patients (Last 7 Days)</h5>
+                    <h3 class="doctor-dashboard-card-text-value display-4 fw-bolder">12</h3>
+                    <p class="card-text text-muted">Patients added to your roster.</p>
+                </a>
+            </div>
+
+            <a href="" class="doctor-dashboard-btn-outline-secondary doctor-dashboard-btn-lg d-block">
+                View My Reports <i class="fas fa-chart-line ms-2"></i>
+            </a>
+            <a href="" class="doctor-dashboard-btn-outline-secondary doctor-dashboard-btn-lg d-block">
+                Search Patients <i class="fas fa-search ms-2"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+{% elif user_type == 'pharmacist' %}
+<div class="row">
+    <div class="col-md-3">
+        <a href="#" class="card custom-styled-card disabled" aria-label="Pending Prescriptions Card">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Pending Prescriptions</h5>
+                    <h3 class="card-text-value">{{ pending_prescriptions }}</h3>
+                    <p class="card-text">Prescriptions awaiting dispensation.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-file-prescription" aria-hidden="true"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{% url 'medication_inventory_list' %}" class="card custom-styled-card" aria-label="Medications Low in Stock Card">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Medications Low in Stock</h5>
+                    <h3 class="card-text-value">{{ low_stock_meds_pharmacist }}</h3>
+                    <p class="card-text">Medications that need reordering.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-pills" aria-hidden="true"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="#" class="card custom-styled-card disabled" aria-label="Expired Medications Card">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Expired / Expiring Soon</h5>
+                    <h3 class="card-text-value">{{ expiring_soon_count }}</h3>
+                    <p class="card-text">Medications expired or nearing expiry date.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-calendar-times" aria-hidden="true"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="#" class="card custom-styled-card disabled" aria-label="Total Medications Card">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Total Medications in Stock</h5>
+                    <h3 class="card-text-value">{{ total_medications_in_stock }}</h3>
+                    <p class="card-text">All active medications in the pharmacy inventory.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-capsules" aria-hidden="true"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">Your Recent Dispensations</div>
+            <div class="card-body">
+                {% if recent_dispensations %}
+                    <ul class="list-group list-group-flush">
+                        {% for prescription in recent_dispensations %}
+                            <li class="list-group-item">
+                                <div><strong>Patient:</strong> {{ prescription.patient.full_name }}</div>
+                                <div><strong>Medication:</strong> {{ prescription.medication.name }} ({{ prescription.quantity }} units)</div>
+                                <div><strong>Date:</strong> <span class="date-time">{{ prescription.dispensed_date|date:"F d, Y P" }}</span></div>
+                                <a href="{% url 'prescription_detail' prescription.pk %}" class="btn btn-link btn-sm mt-2">View Details</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> No recent dispensations recorded.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+        {% elif user_type == 'lab_tech' %}
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'lab_test_requests_list' %}" class="card custom-styled-card " aria-label="Pending Lab Requests Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Pending Lab Requests</h5>
+                                <h3 class="card-text-value">{{ pending_lab_requests }}</h3>
+                                <p class="card-text">New tests awaiting processing.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-vials" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">Your Recent Lab Results</div>
+                        <div class="card-body">
+                            {% if recent_lab_results %}
+                                <ul class="list-group list-group-flush">
+                                    {% for result in recent_lab_results %}
+                                        <li class="list-group-item">
+                                            <div><strong>Patient:</strong> {{ result.patient.full_name }}</div>
+                                            <div><strong>Test:</strong> {{ result.test_type }}</div>
+                                            <div><strong>Result:</strong> {{ result.result_summary|truncatechars:70 }}</div>
+                                            <div><strong>Date:</strong> <span class="date-time">{{ result.result_date|date:"F d, Y P" }}</span></div>
+                                            <a href="{% url 'lab_test_result_detail' result.pk %}" class="btn btn-link btn-sm mt-2">View Details</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i> No recent lab results recorded by you.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% elif user_type == 'radiologist' %}
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="#" class="card custom-styled-card disabled" aria-label="Pending Imaging Reports Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Pending Imaging Reports</h5>
+                                <h3 class="card-text-value">{{ pending_imaging_reports }}</h3>
+                                <p class="card-text">Scans awaiting your interpretation.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-radiation" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">Your Recent Imaging Results</div>
+                        <div class="card-body">
+                            {% if recent_imaging_results %}
+                                <ul class="list-group list-group-flush">
+                                    {% for result in recent_imaging_results %}
+                                        <li class="list-group-item">
+                                            {# CORRECTED LINE based on your model relationships #}
+                                            <div><strong>Patient:</strong> {{ result.request.encounter.patient.user.get_full_name|default:result.request.encounter.patient.user.username }}</div>
+
+                                            {# Also correcting the type and status based on relationships #}
+                                            <div><strong>Type:</strong> {{ result.request.imaging_type.name }}</div>
+                                            <div><strong>Status:</strong> {{ result.request.status }}</div>
+
+                                            <div><strong>Date:</strong> <span class="date-time">{{ result.report_date|date:"F d, Y P" }}</span></div>
+                                            <a href="{% url 'imaging_result_detail' result.pk %}" class="btn btn-link btn-sm mt-2">View Report</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i> No recent imaging results recorded by you.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+{% elif user_type == 'receptionist' %}
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{% url 'appointment_calendar' %}" class="card custom-styled-card" aria-label="Today's Appointments Card">
+                <div class="card-body">
+                    <div class="card-text-container">
+                        <h5>Appointment Calendar</h5>
+                        <h3 class="card-text-value">{{ today_appointments }}</h3>
+                        <p class="card-text">Total appointments for today.</p>
+                    </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'patient_list' %}" class="card custom-styled-card" aria-label="New Patient Registrations Today Card">
+                
+                <div class="card-body">
+                    <div class="card-text-container">
+                        <h5>New Patient Registrations Today</h5>
+                        <h3 class="card-text-value">{{ new_patient_registrations_today }}</h3>
+                        <p class="card-text">New patients added today.</p>
+                    </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'all_visit_list' %}" class="card custom-styled-card" aria-label="New Visits Today Card">
+                <div class="card-body">
+                    <div class="card-text-container">
+                        <h5>Visits</h5>
+                        <h3 class="card-text-value">{{ today_visits }}</h3>
+                        <p class="card-text">New visits today.</p>
+                    </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-notes-medical" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+<div class="row">
+    <!-- Recent Appointments (5 columns) -->
+    <div class="col-md-7">
+        <div class="card mb-4">
+            
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span>Recent Appointments</span>
+                <a href="{% url 'appointment_list' %}" class="btn btn-light btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments_reception %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appt in recent_appointments_reception %}
+                                    <tr>
+                                        <td>{{ appt.patient.full_name }}</td>
+                                        <td>{{ appt.doctor.user.get_full_name|default:appt.doctor.user.username }}</td>
+                                        <td>{{ appt.status }}</td>
+                                        <td><span class="date-time">{{ appt.appointment_date|date:"F d, Y P" }}</span></td>
+                                        <td>
+                                            <a href="{% url 'appointment_detail' appt.pk %}" class="btn btn-sm btn-outline-info">
+                                                View 
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> No recent appointments to display.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Visits (7 columns) -->
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span>Recent Visits</span>
+                <a href="{% url 'all_visit_list' %}" class="btn btn-light btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+{% if recent_visits_reception %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Patient</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>View</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visit in recent_visits_reception %}
+        <tr>
+            <td>
+                <h6 class="mb-0 text-sm">{{ visit.patient.full_name }}</h6>
+                <p class="text-xs text-secondary mb-0">ID: {{ visit.patient.patient_id }}</p>
+            </td>
+            <td>
+                <p class="text-xs font-weight-bold mb-0 text-truncate" style="max-width: 150px;">{{ visit.reason|default:"N/A" }}</p>
+            </td>
+            
+            <td>
+                <span class="badge badge-sm bg-gradient-{{ visit.status|lower }}">
+                    {{ visit.get_status_display }}
+                </span>
+            </td>
+            <td><span class="text-xs text-secondary font-weight-bold">{{ visit.visit_date|date:"F d, Y P" }}</span></td>
+            <td>
+                <a href="{% url 'visit_detail' visit.pk %}" class="btn btn-sm btn-outline-success">
+                    View
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i> No recent visits to display.
+    </div>
+{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% elif user_type == 'nurse' %}
+<div class="row">
+    <!-- Patients Under My Care -->
+    <div class="col-md-3">
+        <a href="{% url 'patient_list' %}" class="card custom-styled-card" aria-label="Patients Under My Care Card">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Patients Under My Care</h5>
+                    <h3 class="card-text-value">{{ patients_under_care_count }}</h3>
+                    <p class="card-text">Total patients currently under your direct care.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-user-nurse"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Pending Visits / Triage Queue -->
+    <div class="col-md-3">
+        <a href="{% url 'all_visit_list' %}" class="card custom-styled-card" aria-label="Pending Triage">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Waiting for Triage</h5>
+                    <h3 class="card-text-value">{{ waiting_triage_count|default:"0" }}</h3>
+                    <p class="card-text">Patients in queue for vital signs and triage assessment.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Pending Lab Tests -->
+    <div class="col-md-3">
+        <a href="#" class="card custom-styled-card" aria-label="Pending Lab Tests">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Pending Lab Tests</h5>
+                    <h3 class="card-text-value">{{ pending_lab_tests|default:"0" }}</h3>
+                    <p class="card-text">Lab investigations awaiting completion/results.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-vials"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Pending Prescriptions -->
+    <div class="col-md-3">
+        <a href="#" class="card custom-styled-card" aria-label="Pending Prescriptions">
+            <div class="card-body">
+                <div class="card-text-container">
+                    <h5>Pending Prescriptions</h5>
+                    <h3 class="card-text-value">{{ pending_prescriptions|default:"0" }}</h3>
+                    <p class="card-text">Prescriptions awaiting pharmacy fulfillment.</p>
+                </div>
+                <div class="icon-circle">
+                    <i class="fas fa-pills"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Recent Encounters -->
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white"> Encounters Assisted</div>
+            <div class="card-body">
+                {% if recent_encounters_assisted %}
+                    <ul class="list-group list-group-flush">
+                        {% for encounter in recent_encounters_assisted %}
+                            <li class="list-group-item">
+                                <div><strong>Patient:</strong> {{ encounter.patient.user.get_full_name|default:encounter.patient.user.username }}</div>
+                                <div><strong>Doctor:</strong> {{ encounter.doctor.user.get_full_name|default:encounter.doctor.user.username }}</div>
+                                <div><strong>Chief Complaint:</strong> {{ encounter.chief_complaint|truncatechars:70 }}</div>
+                                <div><strong>Date:</strong> <span class="date-time">{{ encounter.encounter_date|date:"F d, Y P" }}</span></div>
+                                <a href="{% url 'encounter_detail' encounter.pk %}" class="btn btn-link btn-sm mt-2">View Encounter</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No recent encounters where you assisted.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Vitals -->
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+
+            Your Patient Vitals
+        </div>
+            <div class="card-body">
+                {% if recent_patient_vitals %}
+                    <ul class="list-group list-group-flush">
+                        {% for vital in recent_patient_vitals %}
+                            <li class="list-group-item">
+                                <div><strong>Patient:</strong> {{ vital.patient.full_name }}</div>
+                                <div><strong>BP:</strong> {{ vital.blood_pressure }} mmHg</div>
+                                <div><strong>Temp:</strong> {{ vital.temperature }}°C</div>
+                                <div><strong>Date:</strong> <span class="date-time">{{ vital.timestamp|date:"F d, Y P" }}</span></div>
+                                <a href="" class="btn btn-link btn-sm mt-2">View Details</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No recent patient vitals recorded by you.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Lab Results -->
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">Lab Results</div>
+            <div class="card-body">
+                {% if recent_lab_results %}
+                    <ul class="list-group list-group-flush">
+                        {% for lab in recent_lab_results %}
+                            <li class="list-group-item">
+                                <div><strong>Patient:</strong> {{ lab.patient.user.get_full_name|default:lab.patient.user.username }}</div>
+                                <div><strong>Test:</strong> {{ lab.test_name }}</div>
+                                <div><strong>Result:</strong> {{ lab.result_summary }}</div>
+                                <div><strong>Date:</strong> <span class="date-time">{{ lab.result_date|date:"F d, Y P" }}</span></div>
+                                <a href="#" class="btn btn-link btn-sm mt-2">View Full Result</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle me-2"></i> No lab results available yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Prescriptions -->
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white"> Prescriptions</div>
+            <div class="card-body">
+                {% if recent_prescriptions %}
+                    <ul class="list-group list-group-flush">
+                        {% for rx in recent_prescriptions %}
+                            <li class="list-group-item">
+                                <div><strong>Patient:</strong> {{ rx.patient.user.get_full_name|default:rx.patient.user.username }}</div>
+                                <div><strong>Medication:</strong> {{ rx.medication_name }}</div>
+                                <div><strong>Dosage:</strong> {{ rx.dosage }}</div>
+                                <div><strong>Date:</strong> <span class="date-time">{{ rx.date_prescribed|date:"F d, Y P" }}</span></div>
+                                <a href="#" class="btn btn-link btn-sm mt-2">View Prescription</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-primary">
+                        <i class="fas fa-info-circle me-2"></i> No prescriptions created recently.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+        {% elif user_type == 'procurement_officer' %}
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'medication_inventory_list' %}" class="card custom-styled-card " aria-label="Low Stock Items Card">
+                        <div class="card-body">
+                            <div class="card-text-container">
+                                <h5>Low Stock Items</h5>
+                                <h3 class="card-text-value">{{ low_stock_items_procurement }}</h3>
+                                <p class="card-text">Items below reorder level across all categories.</p>
+                            </div>
+                            <div class="icon-circle">
+                                <i class="fas fa-boxes" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">Recent Purchase Orders</div>
+                        <div class="card-body">
+                            {% if recent_purchase_orders %}
+                                <ul class="list-group list-group-flush">
+                                    {% for po in recent_purchase_orders %}
+                                        <li class="list-group-item">
+                                            <div><strong>Supplier:</strong> {{ po.supplier.name }}</div> {# Assuming 'supplier' field #}
+                                            <div><strong>Total:</strong> ${{ po.total_amount|floatformat:2 }}</div> {# Assuming 'total_amount' field #}
+                                            <div><strong>Date:</strong> <span class="date-time">{{ po.order_date|date:"F d, Y" }}</span></div> {# Assuming 'order_date' field #}
+                                            <a href="{% url 'purchase_order_detail' po.pk %}" class="btn btn-link btn-sm mt-2">View Order</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i> No recent purchase orders to display.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="alert alert-secondary" role="alert">
+                <h4 class="alert-heading">Role Not Recognized</h4>
+                <p>Your dashboard content will appear here based on your assigned role in the system. Please contact support if you believe this is an error.</p>
+                <hr>
+                <p class="mb-0">You can try logging out and logging back in, or contact your administrator.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">Welcome!</h4>
+            <p>Please <a href="{% url 'login' %}"><strong>log in</strong></a> to access your personalized dashboard and manage your clinical activities.</p>
+            <p class="mb-0">If you don't have an account, please contact your system administrator.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% if user_type == 'admin' %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data passed directly from Django context to JavaScript variables
+            const regLabels = {{ reg_labels|safe }};
+            const regData = {{ reg_data|safe }};
+            const genderLabels = {{ gender_labels|safe }};
+            const genderData = {{ gender_data|safe }};
+            const bloodGroupLabels = {{ blood_group_labels|safe }};
+            const bloodGroupData = {{ blood_group_data|safe }};
+
+            // Chart for Patient Registrations (Line Chart)
+            const ctxReg = document.getElementById('patientRegistrationsChart');
+            if (ctxReg) {
+                new Chart(ctxReg, {
+                    type: 'line',
+                    data: {
+                        labels: regLabels,
+                        datasets: [{
+                            label: 'New Patients',
+                            data: regData,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: '#0d6efd',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#0d6efd',
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart for Patients by Gender (Pie Chart)
+            const ctxGender = document.getElementById('genderPieChart');
+            if (ctxGender) {
+                new Chart(ctxGender, {
+                    type: 'pie',
+                    data: {
+                        labels: genderLabels,
+                        datasets: [{
+                            data: genderData,
+                            backgroundColor: ['#0d6efd', '#dc3545', '#ffc107'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart for Patients by Blood Group (Pie Chart)
+            const ctxBlood = document.getElementById('bloodGroupPieChart');
+            if (ctxBlood) {
+                new Chart(ctxBlood, {
+                    type: 'pie',
+                    data: {
+                        labels: bloodGroupLabels,
+                        datasets: [{
+                            data: bloodGroupData,
+                            backgroundColor: [
+                                '#0d6efd', '#6c757d', '#198754', '#ffc107',
+                                '#dc3545', '#f8f9fa', '#20c997', '#6610f2'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endif %}
+<script>
+    // Get the current hour
+    const date = new Date();
+    const hour = date.getHours();
+
+    // Get the greeting and icon elements
+    const greetingElement = document.getElementById('greeting');
+    const iconElement = document.getElementById('greeting-icon');
+
+    // Determine the greeting and icon based on the time of day
+    if (hour < 12) {
+        // Morning
+        greetingElement.textContent = "Good morning";
+        iconElement.className = "fas fa-sun me-3 text-warning";
+    } else if (hour < 18) {
+        // Afternoon
+        greetingElement.textContent = "Good afternoon";
+        iconElement.className = "fas fa-cloud-sun me-3 text-warning";
+    } else {
+        // Evening
+        greetingElement.textContent = "Good evening";
+        iconElement.className = "fas fa-moon me-3 text-dark";
+    }
+</script>
+
+{% endblock %}

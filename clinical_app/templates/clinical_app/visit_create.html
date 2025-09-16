@@ -1,0 +1,53 @@
+{% extends 'clinical_app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Visit{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-success text-white text-center py-4">
+                    <h2 class="mb-0 fw-bold">Create New Visit</h2>
+                    <p class="mb-0">Fill in the details of the patient's visit.</p>
+                </div>
+                <div class="card-body p-4">
+                    {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="fw-bold">Reason for Visit</label>
+                            {{ form.reason|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Assigned Doctor</label>
+                            {{ form.doctor|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Status</label>
+                            {{ form.status|as_crispy_field }}
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold">Save Visit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'patient_list' %}" class="btn btn-link">Back to Patient List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-shield-check"></i> Insurance List
+        </h2>
+        <a href="{% url 'insurance_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Add Insurance
+        </a>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-gradient bg-primary text-white fw-bold">
+            <i class="bi bi-building"></i> Registered Insurance Providers
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-info">
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Policy Number</th>
+                            <th>Expiry Date</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for insurance in insurances %}
+                        <tr>
+                            <td class="fw-semibold text-primary">{{ insurance.company_name }}</td>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ insurance.policy_number }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if insurance.expiry_date %}
+                                    {% if insurance.expiry_date < today %}
+                                        <span class="badge bg-danger">Expired ({{ insurance.expiry_date|date:"M d, Y" }})</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ insurance.expiry_date|date:"M d, Y" }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'insurance_update' insurance.pk %}" 
+                                   class="btn btn-sm btn-warning me-2 text-white">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a href="{% url 'insurance_delete' insurance.pk %}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete this insurance?');">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">🚫 No insurance records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

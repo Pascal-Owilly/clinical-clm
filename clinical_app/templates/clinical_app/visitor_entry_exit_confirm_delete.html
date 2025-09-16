@@ -1,0 +1,23 @@
+{% extends 'clinical_app/base.html' %}
+
+{% block title %}Confirm Delete Visitor Event{% endblock %}
+
+{% block content %}
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h1 class="card-title mb-0">Confirm Deletion</h1>
+        </div>
+        <div class="card-body">
+            <p class="lead">Are you sure you want to delete this visitor entry/exit record?</p>
+            <p><strong>Type:</strong> {{ entry.get_event_type_display }}</p>
+            <p><strong>Visitor Name:</strong> {{ entry.visitor_name|default:"N/A" }}</p>
+            <p><strong>Timestamp:</strong> {{ entry.timestamp|date:"F j, Y, P" }}</p>
+
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger me-2">Yes, Delete</button>
+                <a href="{% url 'visitor_entry_exit_detail' entry.pk %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}
